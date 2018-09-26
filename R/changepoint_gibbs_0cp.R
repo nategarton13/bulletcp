@@ -49,7 +49,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
   for(i in 1:(warmup)){
 
   ## make proposal for MH steps for GP parameters
-  prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma, l), sigma = prop_var))
+  prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma, l), sigma = prop_var))
   if(verbose == TRUE)
   {
     print(paste("iteration: ",i))
@@ -122,7 +122,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
   for(i in 1:(iter))
   {
     ## given changepoints make proposal for MH steps for GP parameters
-    prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma, l), sigma = prop_var))
+    prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma, l), sigma = prop_var))
     if(verbose == TRUE)
     {
       print(paste("iteration: ",i))

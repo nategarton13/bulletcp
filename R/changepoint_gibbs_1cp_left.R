@@ -82,12 +82,12 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
       ## left of the changepoint
       if(j == 1)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j], beta, intercept), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], beta, intercept), sigma = prop_var[[j]]))
       }
       ## right of the changepiont
       if(j == 2)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
       }
       if(verbose == TRUE)
       {
@@ -264,11 +264,11 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
     {
       if(j == 1)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j], beta, intercept), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], beta, intercept), sigma = prop_var[[j]]))
       }
       if(j == 2)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
       }
       if(verbose == TRUE)
       {
