@@ -15,6 +15,9 @@ detect_cp_v2 <- function(data, iter = 10000, start.vals = NA, prop_var = NA, cp_
 
   ######### end extra functions
 
+  ## this is because hamby44_eval$ccdata_w_resid is actually a list with one element
+  data <- data[[1]]
+
   ## remove NA values from the data
   d <- data.frame("x" = data$y, "y" = scale(data$rlo_resid))
 

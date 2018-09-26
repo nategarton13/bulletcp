@@ -7,12 +7,14 @@
 mlgp(y, x, tol = 1e-06)
 }
 \arguments{
-\item{y}{Numeric y vector.}
+\item{y}{Numeric y vector of response values.}
 
-\item{x}{Numeric x vector.}
+\item{x}{Numeric x vector of locations used for the covariance function.}
 
 \item{tol}{Tolerance level for the maximum likelihood procedure to fit the Gaussian process.}
 }
 \description{
-Functions to impute missing data.
+This function performs maximum likelihood estimation to estimate the variance parameters
+in a Gaussian process with a squared exponential covariance function. These parameters could then be used
+in the Gaussian process used for imputation.
 }
