@@ -66,7 +66,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
   }
   # if both proposal values are positive, compute acceptance probability
   else{
@@ -87,12 +87,12 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
     {
       sigma <- prop[1]
       l <- prop[2]
-      tau <- prop[3]
+      # tau <- prop[3]
     }
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
   }
     #print(i)
   }
@@ -162,7 +162,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
         accept$gp_par[1,] <- accept$gp_par[1,] + 1/iter
         sigma <- prop[1]
         l <- prop[2]
-        tau <- prop[3]
+        # tau <- prop[3]
 
         ## compute and save the log likelihood values to be used in model selection
         lp[i] <- lognormal_ou_pdf(x = temp_dat, mu = rep(0, times = length(temp_dat)), sigma = prop[1], l = prop[2])
@@ -170,7 +170,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
       ## update GP parameters
       par$sigma[i + 1,] <- sigma
       par$l[i + 1,] <- l
-      par$tau[i + 1,] <- tau
+      # par$tau[i + 1,] <- tau
     }
   }
   return(list("parameters" = par, "accept" = accept, "lp" = lp))
