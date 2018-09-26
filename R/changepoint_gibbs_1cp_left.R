@@ -134,8 +134,8 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
 
         log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
           dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
-          dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## slope
-          dnorm(x = prop[5], mean = 0, sd = 10, log = TRUE) + ## intercept
+          dnorm(x = prop[3], mean = 0, sd = 10, log = TRUE) + ## slope
+          dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## intercept
           dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE) - ## marginal standard deviation
           (lognormal_ou_pdf(x = temp_dat, mu = mu, sigma = sigma[j], l = l[j]) + ## likelihood
              dgamma(x = l[j], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -143,13 +143,14 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
              dnorm(x = beta[1], mean = 0, sd = 10, log = TRUE) + ## slope
              dnorm(x = intercept, mean = 0, sd = 10, log = TRUE)) ## intercept
 
+        ## accept proposal with proper probability
         if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
         {
           sigma[j] <- prop[1]
           l[j] <- prop[2]
-          tau[j] <- prop[3]
-          beta <- prop[4]
-          intercept <- prop[5]
+          # tau[j] <- prop[3]
+          beta <- prop[3]
+          intercept <- prop[4]
         }
       }
       if(j == 2)
@@ -164,14 +165,14 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
         {
           sigma[j] <- prop[1]
           l[j] <- prop[2]
-          tau[j] <- prop[3]
+          # tau[j] <- prop[3]
         }
       }
     }
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
     par$beta[i + 1,] <- beta
     par$intercept[i + 1,] <- intercept
 
@@ -181,17 +182,20 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
     {
       print(paste(i,"-th CP proposal: ", prop))
     }
+    ## automatically reject proposal if it is too close to the edge
     if(prop <= tol + interval[1] || prop >= -tol + interval[2])
     {
       par$cp[i + 1,] <- cp
     }
     else{
+      ## split data into left and right of the changepoint
       temp_dat1 <- data[data$x <= xrange[1,2] & data$x > xrange[1,1], ]$y
       temp_dat2 <- data[data$x <= xrange[2,2] & data$x > xrange[2,1], ]$y
 
       prop_temp_dat1 <- data[data$x <= prop & data$x > interval[1], ]$y
       prop_temp_dat2 <- data[data$x < interval[2] & data$x > prop, ]$y
 
+      ## compute the means of the data to the left and right of the changepoint
       med1 <- median(data$x)
       mu1 <- ((data[data$x <= xrange[1,2] & data$x > xrange[1,1], ]$x - med1) / (xrange[2,2] - xrange[1,1])) * beta[1] + intercept
       mu2 <- rep(0, times = length(temp_dat2))
@@ -200,10 +204,14 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
       prop_mu1 <- ((data[data$x <= prop[1] & data$x > interval[1], ]$x - prop_med1) / (xrange[2,2] - xrange[1,1])) * beta[1] + intercept
       prop_mu2 <- rep(0, times = length(prop_temp_dat2))
 
+      ## acceptance probability is just the ratio of the likelihoods from the proposed
+      ## and current models
       log_accept_ratio <- lognormal_ou_pdf(x = prop_temp_dat1, mu = prop_mu1, sigma = sigma[1], l = l[1]) +
         lognormal_ou_pdf(x = prop_temp_dat2, mu = prop_mu2, sigma = sigma[2], l = l[2]) -
         (lognormal_ou_pdf(x = temp_dat1, mu = mu1, sigma = sigma[1], l = l[1]) +
            lognormal_ou_pdf(x = temp_dat2, mu = mu2, sigma = sigma[2], l = l[2]))
+
+      ## accept wiith the proper probability
       if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
       {
         cp <- prop
@@ -216,9 +224,12 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
   ## End warmup
   ###########################################################
   ## tune metropolis proposal variances
-  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$tau[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-5 * diag(5)
-  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,2], par$l[round(warmup/2):warmup,2], par$tau[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(3)
-  cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 2 + 1e-5
+  ## note that the proposal variance is tuned with the second half of the warmup iterations
+  ## note also that I add a small bump to the proposal variances in the case that all of the
+  ## warmup proposals were rejected
+  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-5 * diag(5)
+  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(3)
+  cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 1 + 1e-5
 
   ## reinitialize parameter list
   lp <- numeric()
@@ -229,13 +240,13 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
   par$l <- matrix(nrow = iter + 1, ncol = 2) ## length scale of the GP
   par$l[1,] <- l
 
-  par$tau <- matrix(nrow = iter + 1, ncol = 2) ## nugget of the data model
-  par$tau[1,] <- tau
+  # par$tau <- matrix(nrow = iter + 1, ncol = 2) ## nugget of the data model
+  # par$tau[1,] <- tau
 
-  par$beta <- matrix(nrow = iter + 1, ncol = 1) ## regression coefficient for the GEAs
-  par$beta[1,] <- beta ## each row is the two slope coefficients
+  par$beta <- matrix(nrow = iter + 1, ncol = 1)
+  par$beta[1,] <- beta ## each row is the slope coefficient
 
-  par$intercept <- matrix(nrow = iter + 1, ncol = 1) ## regression intercept for GEAs
+  par$intercept <- matrix(nrow = iter + 1, ncol = 1) ## regression intercept for the GEA
   par$intercept[1,] <- intercept
 
   par$cp <- matrix(nrow = iter + 1, ncol = 1) ## changepoint locations
@@ -253,11 +264,11 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
     {
       if(j == 1)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j], tau[j], beta, intercept), sigma = prop_var[[j]]))
+        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j], beta, intercept), sigma = prop_var[[j]]))
       }
       if(j == 2)
       {
-        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j], tau[j]), sigma = prop_var[[j]]))
+        prop <- as.numeric(rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
       }
       if(verbose == TRUE)
       {
@@ -268,7 +279,7 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
       ## skip this chunk of data if the proposals result in values producing zero density
       if(j == 1)
       {
-        if(any(prop[1:3] <= 0) || prop[4] >= 0)
+        if(any(prop[1:2] <= 0) || prop[3] >= 0)
         {
           # par$sigma[i,j] <- sigma[j]
           # par$l[i,j] <- l[j]
@@ -309,12 +320,13 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
 
         if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
         {
+          ## keep track of acceptances
           accept$gp_par[1,j] <- accept$gp_par[1,j] + 1/iter
           sigma[j] <- prop[1]
           l[j] <- prop[2]
-          tau[j] <- prop[3]
-          beta <- prop[4]
-          intercept <- prop[5]
+          # tau[j] <- prop[3]
+          beta <- prop[3]
+          intercept <- prop[4]
         }
       }
       if(j == 2)
@@ -327,17 +339,18 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
              dnorm(x = sigma[j], mean = 0, sd = 1, log = TRUE))
         if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
         {
+          ## keep track of acceptances
           accept$gp_par[1,j] <- accept$gp_par[1,j] + 1/iter
           sigma[j] <- prop[1]
           l[j] <- prop[2]
-          tau[j] <- prop[3]
+          # tau[j] <- prop[3]
         }
       }
     }
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
     par$beta[i + 1,] <- beta
     par$intercept[i + 1,] <- intercept
 
@@ -350,6 +363,8 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
     if(prop <= tol + interval[1] || prop >= -tol + interval[2])
     {
       par$cp[i + 1,] <- cp
+
+      ## keep track of log likelihood values
       lp[i] <- (lognormal_ou_pdf(x = temp_dat1, mu = rep(0, times = length(temp_dat1)), sigma = sigma[1], l = l[1]) +
                   lognormal_ou_pdf(x = temp_dat2, mu = rep(0, times = length(temp_dat2)), sigma = sigma[2], l = l[2]))
     }
@@ -373,12 +388,15 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
         (lognormal_ou_pdf(x = temp_dat1, mu = mu1, sigma = sigma[1], l = l[1]) +
            lognormal_ou_pdf(x = temp_dat2, mu = mu2, sigma = sigma[2], l = l[2]))
 
+      ## log likelihood value
       lp[i] <- (lognormal_ou_pdf(x = temp_dat1, mu = rep(0, times = length(temp_dat1)), sigma = sigma[1], l = l[1]) +
                   lognormal_ou_pdf(x = temp_dat2, mu = rep(0, times = length(temp_dat2)), sigma = sigma[2], l = l[2]))
 
       if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
       {
         cp <- prop
+
+        ## keep track of acceptance rate and log likelihood values
         accept$cp <- accept$cp + 1/iter
         lp[i] <- lognormal_ou_pdf(x = prop_temp_dat1, mu = rep(0, times = length(prop_temp_dat1)), sigma = sigma[1], l = l[1]) +
           lognormal_ou_pdf(x = prop_temp_dat2, mu = rep(0, times = length(prop_temp_dat2)), sigma = sigma[2], l = l[2])
