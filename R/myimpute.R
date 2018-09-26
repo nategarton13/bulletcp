@@ -6,6 +6,8 @@
 #' @param y Numeric y vector of response values.
 #' @param x Numeric x vector of locations used for the covariance function.
 #' @param tol Tolerance level for the maximum likelihood procedure to fit the Gaussian process.
+#' @return Standard optim output. The first optimized parameter value is the standard deviation
+#'   the second is the length scale.
 #' @export
 mlgp <- function(y,x,tol = 1e-6)
 {
@@ -57,6 +59,7 @@ mlgp <- function(y,x,tol = 1e-6)
 #' @param x Numeric x vector of locations used for the covariance function.
 #' @param sigma Marginal standard deviation in the Gaussian process.
 #' @param l Length scale parameter in the Gaussian process.
+#' @return A data frame with columns "x" and "y" which contain the combined observed and imputed data.
 #' @export
 
 myimpute <- function(y,x, sigma, l)

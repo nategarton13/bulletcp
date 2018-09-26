@@ -15,6 +15,9 @@ myimpute(y, x, sigma, l)
 
 \item{l}{Length scale parameter in the Gaussian process.}
 }
+\value{
+A data frame with columns "x" and "y" which contain the combined observed and imputed data.
+}
 \description{
 This function imputes missing data based on a Gaussian process regression
 }

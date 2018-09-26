@@ -13,6 +13,10 @@ mlgp(y, x, tol = 1e-06)
 
 \item{tol}{Tolerance level for the maximum likelihood procedure to fit the Gaussian process.}
 }
+\value{
+Standard optim output. The first optimized parameter value is the standard deviation
+  the second is the length scale.
+}
 \description{
 This function performs maximum likelihood estimation to estimate the variance parameters
 in a Gaussian process with a squared exponential covariance function. These parameters could then be used
