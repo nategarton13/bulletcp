@@ -16,7 +16,7 @@
 #' @param prop_var A two element list of the proposal variance-covariance matrices for the random
 #' walk metropolis algorithm(s). The first element is for the data to the left of the changepoint.
 #' @param cp_prop_var The proposal variance for the changepoint.
-#' @param tol This parameter controls how close changepoint proposals can be to the edge of the data
+#' @param tol_edge This parameter controls how close changepoint proposals can be to the edge of the data
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 #' automatically rejected if the proposal is within a distance of 10 x-values from either edge.
 #' @param warmup The number of initial iterations which serves two purposes: the first is to allow the
@@ -27,7 +27,7 @@
 #' values of the log data pdf at each sampled parameter value. "gp_prop_var" and "cp_prop_var" are
 #' the tuned proposal variances for the metropolis steps.
 #' @export
-cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10, warmup = 5000, verbose = FALSE)
+cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 5000, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 
@@ -130,7 +130,7 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
         ## here we estimate the mean of the data to the left of the changepoint
         ## as a linear function of the distance from the median of the data (x-values)
         mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[2,2] - xrange[1,1])) * beta[1] + intercept
-        prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[2,2] - xrange[1,1])) * prop[4] + prop[5]
+        prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[2,2] - xrange[1,1])) * prop[3] + prop[4]
 
         log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
           dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -183,7 +183,7 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
       print(paste(i,"-th CP proposal: ", prop))
     }
     ## automatically reject proposal if it is too close to the edge
-    if(prop <= tol + interval[1] || prop >= -tol + interval[2])
+    if(prop <= tol_edge + interval[1] || prop >= -tol_edge + interval[2])
     {
       par$cp[i + 1,] <- cp
     }
@@ -305,12 +305,12 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
       {
         med <- median(data$x)
         mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[2,2] - xrange[1,1])) * beta[1] + intercept
-        prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[2,2] - xrange[1,1])) * prop[4] + prop[5]
+        prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[2,2] - xrange[1,1])) * prop[3] + prop[4]
 
         log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
           dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
-          dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## slope
-          dnorm(x = prop[5], mean = 0, sd = 10, log = TRUE) + ## intercept
+          dnorm(x = prop[3], mean = 0, sd = 10, log = TRUE) + ## slope
+          dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## intercept
           dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE) - ## marginal standard deviation
           (lognormal_ou_pdf(x = temp_dat, mu = mu, sigma = sigma[j], l = l[j]) + ## likelihood
              dgamma(x = l[j], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -360,7 +360,7 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 
     {
       print(paste(i,"-th CP proposal: ", prop))
     }
-    if(prop <= tol + interval[1] || prop >= -tol + interval[2])
+    if(prop <= tol_edge + interval[1] || prop >= -tol_edge + interval[2])
     {
       par$cp[i + 1,] <- cp
 

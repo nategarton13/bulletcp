@@ -22,16 +22,19 @@
 #' walk Metropolis algorithm(s). The first element is for the left groove engraved area.
 #' The second element is for the land engraved area, and the third element is for the right engraved area.
 #' @param cp_prop_var The proposal variance-covariance matrix for the changepoints.
-#' @param tol This parameter controls how close changepoint proposals can be to the edge of the data OR to each other
+#' @param tol_edge This parameter controls how close changepoint proposals can be to the edge of the data
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
-#' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either edge or each other.
+#' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either edge.
+#' @param tol_cp This parameter controls how close changepoint proposals can be to each other
+#' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
+#' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either each other.
 #' @param warmup The number of initial iterations which serves two purposes: the first is to allow the
 #' algorithm to wander to the area of most mass, and the second is to tune the proposal variance.
 #' @param verbose Logical value indicating whether to print the iteration number and the parameter proposals.
 #' @return A named list containing the sampled parameters, acceptance rates for the Metropolis steps,
 #' log likelihood values, and proposal variance for the changepoints.
 #' @export
-cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10, warmup = 5000, verbose = FALSE)
+cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, tol_cp = 1000, warmup = 5000, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 
@@ -139,7 +142,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[3,2] - xrange[1,1])) * beta[1] + intercept[1]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[4] + prop[5]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -165,12 +168,12 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[3,2] - xrange[1,1])) * beta[2] + intercept[2]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[4] + prop[5]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
-            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## slope
-            dnorm(x = prop[5], mean = 0, sd = 10, log = TRUE) + ## intercept
+            dnorm(x = prop[3], mean = 0, sd = 10, log = TRUE) + ## slope
+            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## intercept
             dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE) - ## marginal standard devivation
             (lognormal_ou_pdf(x = temp_dat, mu = mu, sigma = sigma[j], l = l[j]) + ## likelihood
                dgamma(x = l[j], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -182,9 +185,9 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
           {
             sigma[j] <- prop[1]
             l[j] <- prop[2]
-            tau[j] <- prop[3]
-            beta[2] <- prop[4]
-            intercept[2] <- prop[5]
+            # tau[j] <- prop[3]
+            beta[2] <- prop[3]
+            intercept[2] <- prop[4]
           }
         }
         if(j == 2)
@@ -199,14 +202,14 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
           {
             sigma[j] <- prop[1]
             l[j] <- prop[2]
-            tau[j] <- prop[3]
+            # tau[j] <- prop[3]
           }
         }
     }
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
     par$beta[i + 1,] <- beta
     par$intercept[i + 1,] <- intercept
 
@@ -216,7 +219,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
     {
       print(paste(i,"-th CP proposal: ", prop))
     }
-    if(prop[1] >= prop[2] - tol || prop[1] <= tol + interval[1] || prop[2] >= -tol + interval[2])
+    if(prop[1] >= prop[2] - tol_cp || prop[1] <= tol_edge + interval[1] || prop[2] >= -tol_edge + interval[2])
     {
       par$cp[i + 1,] <- cp
     }
@@ -259,9 +262,9 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
   ## End warmup
   ###########################################################
   ## tune metropolis proposal variances
-  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$tau[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-5 * diag(5)
-  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2),2], par$l[round(warmup/2):warmup,2], par$tau[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(3)
-  prop_var[[3]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,3], par$l[round(warmup/2):warmup,3], par$tau[round(warmup/2):warmup,3], par$beta[round(warmup/2):warmup,2], par$intercept[round(warmup/2) : warmup, 2])) / 4 + 1e-5 * diag(5)
+  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-5 * diag(4)
+  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2),2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(2)
+  prop_var[[3]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,3], par$l[round(warmup/2):warmup,3], par$beta[round(warmup/2):warmup,2], par$intercept[round(warmup/2) : warmup, 2])) / 4 + 1e-5 * diag(4)
   cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 2 + 1e-5 * diag(2)
 
   ## reinitialize parameter list
@@ -273,8 +276,8 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
   par$l <- matrix(nrow = iter + 1, ncol = 3) ## length scale of the GP
   par$l[1,] <- l
 
-  par$tau <- matrix(nrow = iter + 1, ncol = 3) ## nugget of the data model
-  par$tau[1,] <- tau
+  # par$tau <- matrix(nrow = iter + 1, ncol = 3) ## nugget of the data model
+  # par$tau[1,] <- tau
 
   par$cp <- matrix(nrow = iter + 1, ncol = 2) ## changepoint locations
   par$cp[1,] <- cp
@@ -298,15 +301,15 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
     {
       if(j == 1)
       {
-        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], tau[j], beta[1], intercept[1]), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], beta[1], intercept[1]), sigma = prop_var[[j]]))
       }
       if(j == 3)
       {
-        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], tau[j], beta[2], intercept[2]), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], beta[2], intercept[2]), sigma = prop_var[[j]]))
       }
       if(j == 2)
       {
-        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j], tau[j]), sigma = prop_var[[j]]))
+        prop <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = c(sigma[j], l[j]), sigma = prop_var[[j]]))
       }
       if(verbose == TRUE)
       {
@@ -317,7 +320,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
       ## skip this chunk of data if the proposals result in values producing zero density
       if(j == 1)
       {
-        if(any(prop[1:3] <= 0) || prop[4] >= 0)
+        if(any(prop[1:2] <= 0) || prop[3] >= 0)
         {
           # par$sigma[i,j] <- sigma[j]
           # par$l[i,j] <- l[j]
@@ -337,7 +340,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
       }
       if(j == 3)
       {
-        if(any(prop[1:3] <= 0) || prop[4] <= 0)
+        if(any(prop[1:2] <= 0) || prop[3] <= 0)
         {
           # par$sigma[i,j] <- sigma[j]
           # par$l[i,j] <- l[j]
@@ -353,12 +356,12 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1])) * beta[1] + intercept[1]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[4] + prop[5]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
-            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## slope
-            dnorm(x = prop[5], mean = 0, sd = 10, log = TRUE) + ## intercept
+            dnorm(x = prop[3], mean = 0, sd = 10, log = TRUE) + ## slope
+            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## intercept
             dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE) - ## marginal standard deviation
             (lognormal_ou_pdf(x = temp_dat, mu = mu, sigma = sigma[j], l = l[j]) + ## likelihood
                dgamma(x = l[j], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -371,21 +374,21 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
             accept$gp_par[1,j] <- accept$gp_par[1,j] + 1/iter
             sigma[j] <- prop[1]
             l[j] <- prop[2]
-            tau[j] <- prop[3]
-            beta[1] <- prop[4]
-            intercept[1] <- prop[5]
+            # tau[j] <- prop[3]
+            beta[1] <- prop[3]
+            intercept[1] <- prop[4]
           }
         }
         if(j == 3)
         {
           med <- median(data$x)
           mu <- (data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1]) * beta[2] + intercept[2]
-          prop_mu <- data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x / (xrange[3,2] - xrange[1,1]) * prop[4] + prop[5]
+          prop_mu <- data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x / (xrange[3,2] - xrange[1,1]) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
-            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## slope
-            dnorm(x = prop[5], mean = 0, sd = 10, log = TRUE) + ## intercept
+            dnorm(x = prop[3], mean = 0, sd = 10, log = TRUE) + ## slope
+            dnorm(x = prop[4], mean = 0, sd = 10, log = TRUE) + ## intercept
             dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE) - ## marginal standard devivation
             (lognormal_ou_pdf(x = temp_dat, mu = mu, sigma = sigma[j], l = l[j]) + ## likelihood
                dgamma(x = l[j], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -398,9 +401,9 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
             accept$gp_par[1,j] <- accept$gp_par[1,j] + 1/iter
             sigma[j] <- prop[1]
             l[j] <- prop[2]
-            tau[j] <- prop[3]
-            beta[2] <- prop[4]
-            intercept[2] <- prop[5]
+            # tau[j] <- prop[3]
+            beta[2] <- prop[3]
+            intercept[2] <- prop[4]
           }
         }
         if(j == 2)
@@ -416,7 +419,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
             accept$gp_par[1,j] <- accept$gp_par[1,j] + 1/iter
             sigma[j] <- prop[1]
             l[j] <- prop[2]
-            tau[j] <- prop[3]
+            # tau[j] <- prop[3]
           }
         }
     }
@@ -424,7 +427,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
     ## update GP parameters
     par$sigma[i + 1,] <- sigma
     par$l[i + 1,] <- l
-    par$tau[i + 1,] <- tau
+    # par$tau[i + 1,] <- tau
     par$beta[i + 1,] <- beta
     par$intercept[i + 1,] <- intercept
 
@@ -434,7 +437,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol = 10
     {
       print(paste(i,"-th CP proposal: ", prop))
     }
-    if(prop[1] >= prop[2] - tol || prop[1] <= tol + interval[1] || prop[2] >= -tol + interval[2])
+    if(prop[1] >= prop[2] - tol_cp || prop[1] <= tol_edge + interval[1] || prop[2] >= -tol_edge + interval[2])
     {
       par$cp[i + 1,] <- cp
       lp[i] <- (lognormal_ou_pdf(x = temp_dat1, mu = mu1, sigma = sigma[1], l = l[1]) +

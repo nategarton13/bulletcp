@@ -20,7 +20,7 @@
 #' @param prop_var_right The proposal variance for the random walk Metropolis algorithm assuming
 #' that the groove is on the right.
 #' @param cp_prop_var The proposal variance for the changepoint.
-#' @param tol This parameter controls how close changepoint proposals can be to the edge of the data
+#' @param tol_edge This parameter controls how close changepoint proposals can be to the edge of the data
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 #' automatically rejected if the proposal is within a distance of 10 x-values from either edge.
 #' @param warmup The number of initial iterations which serves two purposes: the first is to allow the
@@ -29,15 +29,15 @@
 #' @return A named list with all of the output that the left and right changepoint functions produce
 #' individually plus the posterior means of the left and right changepoints.
 #' @export
-cp1_gibbs_v2 <- function(data, iter, start.vals.left, start.vals.right, prop_var_left, prop_var_right, cp_prop_var, tol = 10, warmup = 5000, verbose = FALSE)
+cp1_gibbs_v2 <- function(data, iter, start.vals.left, start.vals.right, prop_var_left, prop_var_right, cp_prop_var, tol_edge = 10, warmup = 5000, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 
   ## run left cp algorithm first
-  left_cp_out <- cp1_gibbs_left(data = data, iter = iter, warmup = warmup, start.vals = start.vals.left, prop_var = prop_var_left, cp_prop_var = cp_prop_var, verbose = verbose)
+  left_cp_out <- cp1_gibbs_left(data = data, iter = iter, warmup = warmup, start.vals = start.vals.left, prop_var = prop_var_left, cp_prop_var = cp_prop_var, verbose = verbose, tol_edge = tol_edge)
 
   ## run right cp algorithm
-  right_cp_out <- cp1_gibbs_right(data = data, iter = iter, warmup = warmup, start.vals = start.vals.right, prop_var = prop_var_right, cp_prop_var = cp_prop_var, verbose = verbose)
+  right_cp_out <- cp1_gibbs_right(data = data, iter = iter, warmup = warmup, start.vals = start.vals.right, prop_var = prop_var_right, cp_prop_var = cp_prop_var, verbose = verbose, tol_edge = tol_edge)
 
   ## compute posterior probabilities of left or right changepoint
   # prior <- 0.5
