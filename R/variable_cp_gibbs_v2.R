@@ -119,15 +119,15 @@ variable_cp_gibbs_v2 <- function(data, iter = 50000, start.vals = NA, prop_var =
 #
 # ## run cp algorithm
 
-# lognormal_ou_pdf <- function(x, mu, sigma, l)
-# {
-#   n <- length(x)
-#   rho <- exp(-1/l)
-#
-#   return(-n/2 * log(2 * pi) - n * log(sigma) - ((n - 1)/2) * log(1 - rho^2)
-#          - 1/2 * 1/(sigma^2 * (1 - rho^2)) * ((x[1] - mu[1])^2 + (x[n] - mu[n])^2 + (1 + rho^2) * sum((x[2:(n-1)] - mu[2:(n-1)])^2)
-#                                               - 2 * rho * sum((x[1:(n-1)] - mu[1:(n-1)]) * (x[2:n] - mu[2:n]))))
-# }
+lognormal_ou_pdf <- function(x, mu, sigma, l)
+{
+  n <- length(x)
+  rho <- exp(-1/l)
+
+  return(-n/2 * log(2 * pi) - n * log(sigma) - ((n - 1)/2) * log(1 - rho^2)
+         - 1/2 * 1/(sigma^2 * (1 - rho^2)) * ((x[1] - mu[1])^2 + (x[n] - mu[n])^2 + (1 + rho^2) * sum((x[2:(n-1)] - mu[2:(n-1)])^2)
+                                              - 2 * rho * sum((x[1:(n-1)] - mu[1:(n-1)]) * (x[2:n] - mu[2:n]))))
+}
 
 ## function to sample data weighted according to distance from center
 # sample_weights <- function(x, sq = FALSE, offset = 1)

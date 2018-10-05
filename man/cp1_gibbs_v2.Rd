@@ -5,7 +5,7 @@
 \title{Estimate a posterior distribution of data conditional that there is one groove.}
 \usage{
 cp1_gibbs_v2(data, iter, start.vals.left, start.vals.right, prop_var_left,
-  prop_var_right, cp_prop_var, tol = 10, warmup = 5000,
+  prop_var_right, cp_prop_var, tol_edge = 10, warmup = 5000,
   verbose = FALSE)
 }
 \arguments{
@@ -33,7 +33,7 @@ that the groove is on the right.}
 
 \item{cp_prop_var}{The proposal variance for the changepoint.}
 
-\item{tol}{This parameter controls how close changepoint proposals can be to the edge of the data
+\item{tol_edge}{This parameter controls how close changepoint proposals can be to the edge of the data
 before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 automatically rejected if the proposal is within a distance of 10 x-values from either edge.}
 

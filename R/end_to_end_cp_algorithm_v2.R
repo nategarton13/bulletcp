@@ -32,7 +32,11 @@ detect_cp_v2 <- function(data, iter = 10000, start.vals = NA, prop_var = NA, cp_
     mles <- mlgp(y = temp_dnarm$y, x = temp_dnarm$x)
     impute_par <- exp(mles$par)
   }
-  nud <- myimpute(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
+  if(any(is.na(d$y)) == TRUE)
+  {
+    nud <- myimpute(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
+  }
+  else{nud <- d}
 
   ## run cp algorithm
   test_variable_cp_gibbs <- variable_cp_gibbs_v2(data = nud,

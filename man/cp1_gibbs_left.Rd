@@ -4,8 +4,8 @@
 \alias{cp1_gibbs_left}
 \title{Estimate a posterior distribution of data conditional on a left groove and no right groove.}
 \usage{
-cp1_gibbs_left(data, iter, start.vals, prop_var, cp_prop_var, tol = 10,
-  warmup = 5000, verbose = FALSE)
+cp1_gibbs_left(data, iter, start.vals, prop_var, cp_prop_var,
+  tol_edge = 50, warmup = 5000, verbose = FALSE)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the
@@ -24,7 +24,7 @@ walk metropolis algorithm(s). The first element is for the data to the left of t
 
 \item{cp_prop_var}{The proposal variance for the changepoint.}
 
-\item{tol}{This parameter controls how close changepoint proposals can be to the edge of the data
+\item{tol_edge}{This parameter controls how close changepoint proposals can be to the edge of the data
 before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 automatically rejected if the proposal is within a distance of 10 x-values from either edge.}
 
