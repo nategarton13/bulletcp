@@ -233,6 +233,7 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_ed
 
   ## reinitialize parameter list
   lp <- numeric()
+  lpost <- numeric() ## log posterior values
   par <- list()
   par$sigma <- matrix(nrow = iter + 1, ncol = 2) ## the variance of the GP
   par$sigma[1,] <- sigma
@@ -367,6 +368,12 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_ed
       ## keep track of log likelihood values
       lp[i] <- (lognormal_ou_pdf(x = temp_dat1, mu = rep(0, times = length(temp_dat1)), sigma = sigma[1], l = l[1]) +
                   lognormal_ou_pdf(x = temp_dat2, mu = rep(0, times = length(temp_dat2)), sigma = sigma[2], l = l[2]))
+      lpost[i] <- lp[i] + dgamma(x = l[1], shape = 3, rate = 5, log = TRUE) +
+        dnorm(x = sigma[1], mean = 0, sd = 1, log = TRUE) +
+        dgamma(x = l[2], shape = 3, rate = 5, log = TRUE) +
+        dnorm(x = sigma[2], mean = 0, sd = 1, log = TRUE) +
+        dnorm(x = beta[1], mean = 0, sd = 10, log = TRUE) + ## slope
+        dnorm(x = intercept, mean = 0, sd = 10, log = TRUE)
     }
     else{
       temp_dat1 <- data[data$x <= xrange[1,2] & data$x > xrange[1,1], ]$y
@@ -391,6 +398,13 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_ed
       ## log likelihood value
       lp[i] <- (lognormal_ou_pdf(x = temp_dat1, mu = rep(0, times = length(temp_dat1)), sigma = sigma[1], l = l[1]) +
                   lognormal_ou_pdf(x = temp_dat2, mu = rep(0, times = length(temp_dat2)), sigma = sigma[2], l = l[2]))
+      lpost[i] <- lp[i] + dgamma(x = l[1], shape = 3, rate = 5, log = TRUE) +
+        dnorm(x = sigma[1], mean = 0, sd = 1, log = TRUE) +
+        dgamma(x = l[2], shape = 3, rate = 5, log = TRUE) +
+        dnorm(x = sigma[2], mean = 0, sd = 1, log = TRUE) +
+        dnorm(x = beta[1], mean = 0, sd = 10, log = TRUE) + ## slope
+        dnorm(x = intercept, mean = 0, sd = 10, log = TRUE)
+
 
       if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
       {
@@ -400,13 +414,20 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_ed
         accept$cp <- accept$cp + 1/iter
         lp[i] <- lognormal_ou_pdf(x = prop_temp_dat1, mu = rep(0, times = length(prop_temp_dat1)), sigma = sigma[1], l = l[1]) +
           lognormal_ou_pdf(x = prop_temp_dat2, mu = rep(0, times = length(prop_temp_dat2)), sigma = sigma[2], l = l[2])
+
+        lpost[i] <- lp[i] + dgamma(x = l[1], shape = 3, rate = 5, log = TRUE) +
+          dnorm(x = sigma[1], mean = 0, sd = 1, log = TRUE) +
+          dgamma(x = l[2], shape = 3, rate = 5, log = TRUE) +
+          dnorm(x = sigma[2], mean = 0, sd = 1, log = TRUE) +
+          dnorm(x = beta[1], mean = 0, sd = 10, log = TRUE) + ## slope
+          dnorm(x = intercept, mean = 0, sd = 10, log = TRUE)
       }
     }
     par$cp[i + 1,] <- cp
     #print(i)
   }
 
-  return(list("parameters" = par, "accept" = accept, "lp" = lp, "gp_prop_var" = prop_var, "cp_prop_var" = cp_prop_var))
+  return(list("parameters" = par, "accept" = accept, "lp" = lp, "lpost" = lpost,"gp_prop_var" = prop_var, "cp_prop_var" = cp_prop_var))
 }
 
 

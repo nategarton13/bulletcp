@@ -53,6 +53,7 @@ cp1_gibbs_v2 <- function(data, iter, start.vals.left, start.vals.right, prop_var
   return(list("left_parameters" = left_cp_out$parameters, "right_parameters" = right_cp_out$parameters,
               "accept" = list("left" = left_cp_out$accept, "right" = right_cp_out$accept),
               "lp" = list("left" = left_cp_out$lp, "right" = right_cp_out$lp),
+              "lpost" = list("left" = left_cp_out$lpost, "right" = right_cp_out$lpost),
               "estimated_cp" = list("left" = est_left_cp, "right" = est_right_cp))
          )
 }

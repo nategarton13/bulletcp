@@ -1,5 +1,5 @@
 ## end to end data preprocessing and gibbs algorithm
-detect_cp_v2 <- function(data, iter = 10000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 5000, verbose = FALSE,
+detect_cp_v2 <- function(data, iter = 10000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE,
                          prior_numcp = c(1/3, 1/3, 1/3), est_impute_par = FALSE, impute_par = c(0.8,15))
 {
   ## put extra functions in here just in case
@@ -42,23 +42,24 @@ detect_cp_v2 <- function(data, iter = 10000, start.vals = NA, prop_var = NA, cp_
   test_variable_cp_gibbs <- variable_cp_gibbs_v2(data = nud,
                                                           start.vals = start.vals,
                                                           prop_var = prop_var, cp_prop_var = cp_prop_var, verbose = FALSE, tol_edge = tol_edge, tol_cp = tol_cp, iter = iter, warmup = warmup, prior_numcp = prior_numcp)
-  if(which.max(test_variable_cp_gibbs$max_lp) == 1)
+  if(which.max(test_variable_cp_gibbs$max_lpost) == 1)
   {
     grooves <- range(nud$x)
   }
-  if(which.max(test_variable_cp_gibbs$max_lp) %in% c(2,3))
+  if(which.max(test_variable_cp_gibbs$max_lpost) %in% c(2,3))
   {
     upper <- max(d$x[!is.na(d$y)])
     lower <- min(d$x[!is.na(d$y)])
     tmp <- c(test_variable_cp_gibbs$cp_map[[2]]$left, upper)
     tmp2 <- c(lower, test_variable_cp_gibbs$cp_map[[2]]$right)
-    if(test_variable_cp_gibbs$max_lp$cp1_left > test_variable_cp_gibbs$max_lp$cp1_right)
+
+    if(test_variable_cp_gibbs$max_lpost$cp1_left > test_variable_cp_gibbs$max_lpost$cp1_right)
     {
       grooves <- tmp
     }
     else{grooves <- tmp2}
   }
-  if(which.max(test_variable_cp_gibbs$max_lp) == 4)
+  if(which.max(test_variable_cp_gibbs$max_lpost) == 4)
   {
     upper <- max(d$x[!is.na(d$y)])
     lower <- min(d$x[!is.na(d$y)])

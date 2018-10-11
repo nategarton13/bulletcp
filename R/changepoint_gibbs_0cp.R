@@ -107,6 +107,7 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
 
   ## reinitialize parameter list
   lp <- numeric()
+  lpost <- numeric() ## log posterior value
   par <- list()
   par$sigma <- matrix(nrow = iter + 1, ncol = 1) ## the variance of the GP
   par$sigma[1,] <- sigma
@@ -156,6 +157,8 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
 
       ## compute and save the log likelihood values to be used in model selection
       lp[i] <- lognormal_ou_pdf(x = temp_dat, mu = rep(0, times = length(temp_dat)), sigma = sigma, l = l)
+      lpost[i] <- lp[i] + dgamma(x = l, shape = 3, rate = 5, log = TRUE) +
+        dnorm(x = sigma, mean = 0, sd = 1, log = TRUE)
 
       if(log(runif(n = 1, min = 0, max = 1)) <= log_accept_ratio)
       {
@@ -166,6 +169,8 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
 
         ## compute and save the log likelihood values to be used in model selection
         lp[i] <- lognormal_ou_pdf(x = temp_dat, mu = rep(0, times = length(temp_dat)), sigma = prop[1], l = prop[2])
+        lpost[i] <- lp[i] + dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) +
+          dnorm(x = prop[1], mean = 0, sd = 1, log = TRUE)
       }
       ## update GP parameters
       par$sigma[i + 1,] <- sigma
@@ -173,5 +178,5 @@ cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose =
       # par$tau[i + 1,] <- tau
     }
   }
-  return(list("parameters" = par, "accept" = accept, "lp" = lp))
+  return(list("parameters" = par, "accept" = accept, "lp" = lp, "lpost" = lpost))
 }

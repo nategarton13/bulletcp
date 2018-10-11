@@ -7,35 +7,45 @@
 #' samples for the changepoints for minimal diagnostic use.
 #' @param data Data frame with columns "x" and "y." "x" is a column of the locations of the
 #' observed residual values, y.
-#' @param iter Number of interations after warmup.
-#' @param start.vals Starting values for the changepoint algorithm. This is a named list
-#' of lists. The names of the lists should be "cp2","cp1", and "cp0". Each list posessing
+#' @param iter Number of iterations after warmup.
+#' @param start.vals Starting values for the changepoint algorithm. Either NA valued or a named list
+#' of lists. If list, the names of the lists should be "cp2","cp1", and "cp0". Each list posessing
 #' one of those aforementioned names is a list of starting values identical to what would be given
 #' if the changepoint algorithm were to be run with the corresponding number of specified changepoints.
 #' List with elements "sigma", "l", "cp", "beta", and "intercept." "sigma" and "l"
 #'   are 3 element vectors where the first element is for the data on the left groove.
 #'   The second element is for the land engraved area, and the third element is for the right groove.
 #'   "cp" is the vector of changepoint starting values. "beta" and "intercept" are two element vectors
-#'   of the slope and intercept for the left and right groove engraved area respectively.
-#' @param prop_var A three element list of the proposal variance-covariance matrices for the random
-#' walk Metropolis algorithm(s). The first element is for the left groove engraved area.
-#' The second element is for the land engraved area, and the third element is for the right engraved area.
-#' @param cp_prop_var The proposal variance-covariance matrix for the changepoints.
+#'   of the slope and intercept for the left and right groove engraved area respectively. If NA,
+#'   default starting values will be used. Note that the changepoint starting values should always be
+#'   near the edges of the data.
+#' @param prop_var Either NA valued or a list of named lists. If list, the names of the lists should be "cp2","cp1", and "cp0".
+#' Each list posessing
+#' one of those aforementioned names is a list of proposal covariance matrices identical to what would be given
+#' if the changepoint algorithm were to be run with the corresponding number of specified changepoints.
+#' @param cp_prop_var The proposal variance-covariance matrix for the changepoints. Can either be
+#' NA or a named list. If list, the names of the list items should be "cp2", "cp1" where each is the appropriate
+#' proposal variance/covariance matrix for the number of changepoints.
 #' @param tol_edge This parameter controls how close changepoint proposals can be to the edge of the data
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 #' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either edge.
 #' @param tol_cp This parameter controls how close changepoint proposals can be to each other
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 #' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either each other.
-#' @param warmup The number of initial iterations which serves two purposes: the first is to allow the
-#' algorithm to wander to the area of most mass, and the second is to tune the proposal variance.
+#' @param warmup The number of warmup iterations. This should be set to a very small number of iterations,
+#' as using too many iterations as warmup risks moving past the changepoints and getting stuck in a local mode.
+#' Default is set to 500.
 #' @param verbose Logical value indicating whether to print the iteration number and the parameter proposals.
-#' @return A named list containing the sampled parameters, acceptance rates for the Metropolis steps,
-#' log likelihood values, and proposal variance for the changepoints.
+#' @return A named list containing the sampled changepoint locations for both the one and two changepoint scenarios,
+#' the posterior changepoint means, the average log pdf values from the data model under each model,
+#' the maximum log probability values under each model
+#' log likelihood values, and estimates of the maximum a posteriori changepoint value
+#' under each model.
 #' @export
 
+
 ## function to get the conditional posterior given 0,1,2 changepoints
-variable_cp_gibbs_v2 <- function(data, iter = 50000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 5000, verbose = FALSE, prior_numcp = c(1/3, 1/3, 1/3))
+variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = c(1/3, 1/3, 1/3))
 {
   ## If some function arguments (starting values/proposal variances are unspecified)
   ## choose generic arguments
@@ -68,41 +78,44 @@ variable_cp_gibbs_v2 <- function(data, iter = 50000, start.vals = NA, prop_var =
   cp2_dsn <- cp2_gibbs_v2(data = data, iter = iter, start.vals = start.vals$cp2, prop_var = prop_var$cp2, cp_prop_var = cp_prop_var$cp2, tol_edge = tol_edge, tol_cp = tol_cp, warmup = warmup, verbose = verbose)
   cp_list$cp2 <- cp2_dsn$parameters$cp
   mcp2 <- mean(exp(cp2_dsn$lp))
-  map_cp2 <- cp2_dsn$parameters$cp[which.max(cp2_dsn$lp),]
+  map_cp2 <- cp2_dsn$parameters$cp[which.max(cp2_dsn$lpost),]
 
   ## one changepoint model
   cp1_dsn <- cp1_gibbs_v2(data = data, iter = iter, start.vals.left = start.vals$cp1$left, start.vals.right = start.vals$cp1$right,
                           prop_var_left = prop_var$cp1$left, prop_var_right = prop_var$cp1$right, cp_prop_var = cp_prop_var$cp1, tol_edge = tol_edge, warmup = warmup, verbose = verbose)
   cp_list$cp1 <- list("ppleft" = cp1_dsn$ppleft, "ppright" = cp1_dsn$ppright, "left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
   mcp1 <- 0.5 * mean(exp(cp1_dsn$lp$left)) + 0.5 * mean(exp(cp1_dsn$lp$right))
-  map_cp1_left <- as.numeric(cp1_dsn$left_parameters$cp)[which.max(cp1_dsn$lp$left)]
-  map_cp1_right <- as.numeric(cp1_dsn$right_parameters$cp)[which.max(cp1_dsn$lp$right)]
+  map_cp1_left <- as.numeric(cp1_dsn$left_parameters$cp)[which.max(cp1_dsn$lpost$left)]
+  map_cp1_right <- as.numeric(cp1_dsn$right_parameters$cp)[which.max(cp1_dsn$lpost$right)]
 
   ## zero changepoint model
   cp0_dsn <- cp0_gibbs(data = data, iter = iter, start.vals = start.vals$cp0, prop_var = prop_var$cp0, warmup = warmup, verbose = verbose)
   mcp0 <- mean(cp0_dsn$lp)
 
   ## posterior cp probabilities
-  ratio02 <- exp(log(prior_numcp[1]) + log(mcp0) - log(prior_numcp[3]) - log(mcp2))
-  ratio12 <- exp(log(prior_numcp[2]) + log(mcp1) - log(prior_numcp[3]) - log(mcp2))
-
-  p2 <- 1/(ratio02 + ratio12 + 1)
-  p1 <- ratio12 * p2
-  p0 <- ratio02 * p2
-
-  post_numcp <- c(p0,p1,p2)
+  # ratio02 <- exp(log(prior_numcp[1]) + log(mcp0) - log(prior_numcp[3]) - log(mcp2))
+  # ratio12 <- exp(log(prior_numcp[2]) + log(mcp1) - log(prior_numcp[3]) - log(mcp2))
+  #
+  # p2 <- 1/(ratio02 + ratio12 + 1)
+  # p1 <- ratio12 * p2
+  # p0 <- ratio02 * p2
+  #
+  # post_numcp <- c(p0,p1,p2)
 
   avg_lp <- list("cp0" = mean(cp0_dsn$lp), "cp1" = 0.5 * mean(cp1_dsn$lp$left) + 0.5 * mean(cp1_dsn$lp$right), "cp2" = mean(cp2_dsn$lp))
   avg_lp_left <- mean(cp1_dsn$lp$left)
   avg_lp_right <- mean(cp1_dsn$lp$right)
 
   max_lp <- list("cp0" = max(cp0_dsn$lp), "cp1_left" = max(cp1_dsn$lp$left), "cp1_right" = max(cp1_dsn$lp$right), "cp2" = max(cp2_dsn$lp))
+
+  max_lpost <- list("cp0" = max(cp0_dsn$lpost), "cp1_left" = max(cp1_dsn$lpost$left), "cp1_right" = max(cp1_dsn$lpost$right), "cp2" = max(cp2_dsn$lpost))
   cp_map <- list("2cp" = map_cp2, "1cp" = list("left" = map_cp1_left, "right" = map_cp1_right))
 
-  return(list("posterior_numcp" = post_numcp, "posterior_cp" = cp_list,
+  return(list("posterior_cp" = cp_list,
               "cp_mean" = list("2cp" = apply(X = cp_list$cp2, MARGIN = 2, FUN = mean),
                                "1cp" = list("left" = mean(cp_list$cp1$left), "right" = mean(cp_list$cp1$right))), "avg_lp" = avg_lp, "avg_lp_1cp" = c(avg_lp_left,avg_lp_right),
               "max_lp" = max_lp,
+              "max_lpost" = max_lpost,
               "cp_map" = cp_map))
 
 }
