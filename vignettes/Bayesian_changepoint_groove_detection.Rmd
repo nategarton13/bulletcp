@@ -36,9 +36,9 @@ The idea behind the changepoint approach is that within either the left GEA, rig
 Before introducing the model, we introduce some notation. First, let ${Y(x_i): i = 1,2, ..., n}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. The model we consider is then, 
 
 \begin{align}
-(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_01 + \beta_11 x_{1:k_1}, \Sigma_1) \\
+(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01} + \beta_{11} x_{1:k_1}, \Sigma_1) \\
 (Y(x_{k_1 + 1}), Y(x_{k_1 + 2}), ..., Y(x_{k_2})) &\sim N(0, \Sigma_2) \\ 
-(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) \sim N(\beta_02 + \beta_12 x_{k_2 + 1:n} \Sigma_3)
+(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) &\sim N(\beta_{02} + \beta_{12} x_{k_2 + 1:n} \Sigma_3)
 \end{align}
 
 ```{r setup, include = FALSE}
