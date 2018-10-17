@@ -32,6 +32,9 @@
 #' @param tol_cp This parameter controls how close changepoint proposals can be to each other
 #' before getting automatically rejected. For example, a value of 10 means that the changepoint will be
 #' automatically rejected if either of the proposal changepoints is within a distance of 10 x-values from either each other.
+#' @param prior_numcp This is a vector with four elements giving the prior probabilities for the zero changepoint model,
+#' the one changepoint on the left model, the one changepoint on the right model, and the two changepoint model, in that order.
+#' Note that, practically, because the likelihood values are so large, only very strong priors will influence the results.
 #' @param warmup The number of warmup iterations. This should be set to a very small number of iterations,
 #' as using too many iterations as warmup risks moving past the changepoints and getting stuck in a local mode.
 #' Default is set to 500.
@@ -45,7 +48,7 @@
 
 
 ## function to get the conditional posterior given 0,1,2 changepoints
-variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = c(1/3, 1/3, 1/3))
+variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
 {
   ## If some function arguments (starting values/proposal variances are unspecified)
   ## choose generic arguments
@@ -108,7 +111,7 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
 
   max_lp <- list("cp0" = max(cp0_dsn$lp), "cp1_left" = max(cp1_dsn$lp$left), "cp1_right" = max(cp1_dsn$lp$right), "cp2" = max(cp2_dsn$lp))
 
-  max_lpost <- list("cp0" = max(cp0_dsn$lpost), "cp1_left" = max(cp1_dsn$lpost$left), "cp1_right" = max(cp1_dsn$lpost$right), "cp2" = max(cp2_dsn$lpost))
+  max_lpost <- list("cp0" = max(cp0_dsn$lpost) + log(prior_numcp[1]), "cp1_left" = max(cp1_dsn$lpost$left) + log(prior_numcp[2]), "cp1_right" = max(cp1_dsn$lpost$right) + log(prior_numcp[3]), "cp2" = max(cp2_dsn$lpost) + log(prior_numcp[4]))
   cp_map <- list("2cp" = map_cp2, "1cp" = list("left" = map_cp1_left, "right" = map_cp1_right))
 
   return(list("posterior_cp" = cp_list,

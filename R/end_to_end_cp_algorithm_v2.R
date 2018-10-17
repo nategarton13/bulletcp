@@ -38,8 +38,9 @@
 #' as using too many iterations as warmup risks moving past the changepoints and getting stuck in a local mode.
 #' Default is set to 500.
 #' @param verbose Logical value indicating whether to print the iteration number and the parameter proposals.
-#' @param prior_numcp Vector of three values giving the prior weights for the number of grooves/changepoints.
-#' The default value is a uniform prior.
+#' @param prior_numcp This is a vector with four elements giving the prior probabilities for the zero changepoint model,
+#' the one changepoint on the left model, the one changepoint on the right model, and the two changepoint model, in that order.
+#' Note that, practically, because the likelihood values are so large, only very strong priors will influence the results.
 #' @param est_impute_par Logical value indicating whether parameters for the Gaussian process
 #' imputation should be estimated before actually doing the imputation. Default is FALSE, in which case
 #' the default imputation standard deviation is 0.8 and the length scale is 15. The covariance function
@@ -53,7 +54,7 @@
 #' @export
 
 detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE,
-                         prior_numcp = c(1/3, 1/3, 1/3), est_impute_par = FALSE, impute_par = c(0.8,15))
+                         prior_numcp = rep(1/4, times = 4), est_impute_par = FALSE, impute_par = c(0.8,15))
 {
   ## put extra functions in here just in case
   lognormal_ou_pdf <- function(x, mu, sigma, l)
