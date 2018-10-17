@@ -15,9 +15,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-This package implements a Bayesian changepoint detection algorithm of the flavor found in "Bayesian Retrospective Multiple-Changepoint Identification" by D.A. Stephens in JRSS-c from 1994. This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
+# Introduction 
+This package implements a Bayesian changepoint detection algorithm of the flavor found in "Bayesian Retrospective Multiple-Changepoint Identification" by D.A. Stephens in JRSS-c from 1994 (citation needed). This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
 
-```{r}
+```{r, echo = FALSE}
 library(ggplot2)
 sim_groove <- function(beta = c(-0.5,0.5), a = 300)
 {
@@ -37,75 +38,49 @@ ggplot(data = d) +
 
 ```
 
-The idea behind the changepoint approach is that within either the left GEA, right GEA, or the LEA, the global structure is consistent and can either be described by a line with zero slope, a line with positive slope for the right GEA, or a line with negative slope for the left GEA. The best fitting statistical model, in terms of the magnitude of the likelihood, should then be the one which assumes that the points at which the global structure changes align with where the GEA and LEA meet. In practice there are also complex additional patterns which may result from a number of reasons, but this large scale structural assumption remains generally reasonable. The complex smaller scale patterns can be thought of as the dependence in the data after accounting for the global structure. 
+The idea behind the changepoint approach is that within either the left GEA, right GEA, or the LEA, the global structure is consistent and can either be described by a line with zero slope, a line with positive slope for the right GEA, or a line with negative slope for the left GEA. The best fitting statistical model, in terms of the magnitude of the likelihood, should then be the one which assumes that the points at which the global structure changes align with where the GEA and LEA meet. Thus, our model will befined in a piecewise fashion. In practice there are also complex additional patterns which may result from a number of reasons, but this large scale structural assumption remains generally reasonable. The complex smaller scale patterns can be thought of as the dependence in the data after accounting for the global structure. Because of the nature of the model which we consider, it becomes necessary for computational reasons to perform a couple of data preprocessing steps. Specifically, we will scale the residuals from the robust LOESS procedure, and we will impute missing values. In the next section, we describe the model that we will use to identify changepoints, after which we will describe the estimation procedure which we use. Following that, we will describe the two main data preprocessing steps necessary for estimation to be computationally feasible.
 
-Before introducing the model, we introduce some notation. First, let ${Y(x_i): i = 1,2, ..., n}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. For simplicity, also assume that $x_1 < x_2 < ... < x_n$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. As mentioned in the previous paragraph, the complex small scale patterns, such as the stria, will be modeled through a covariance structure on the data that will be allowed to differ between each GEA and between the GEAs and LEA. We will construct the covariance matrices from the exponential covariance function $K(t, t';\sigma, \ell) = \sigma^2 e^{-\frac{|t - t'|}{\ell}}$. The differences in covariance matrices for the GEAs and LEA will be reflected in the parameters $\sigma$ and $\ell$. The data model that we consider is then, 
+# Model
+
+Before introducing the model, we introduce some notation. First, let $\{Y(x_i): i = 1,2, ..., n\}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. For simplicity, also assume that $x_1 < x_2 < ... < x_n$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. As mentioned in the previous paragraph, the complex small scale patterns, such as the stria, will be modeled through a covariance structure on the data that will be allowed to differ between each GEA and between the GEAs and LEA. We will construct the covariance matrices from the exponential covariance function $K(t, t';\sigma, \ell) = \sigma^2 e^{-\frac{|t - t'|}{\ell}}$. The differences in covariance matrices for the GEAs and LEA will be reflected in the parameters $\sigma$ and $\ell$. The data model that we consider is then, 
 
 \begin{align}
-(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
+(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x'_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
 (Y(x_{k_1 + 1}), Y(x_{k_1 + 2}), ..., Y(x_{k_2})) &\sim N(0, \Sigma_2(\sigma_2, \ell_2)) \\ 
-(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) &\sim N(\beta_{02}\mathbb{1} + \beta_{12} x_{k_2 + 1:n} \Sigma_3(\sigma_3, \ell_3)),
+(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) &\sim N(\beta_{02}\mathbb{1} + \beta_{12} x'_{k_2 + 1:n}, \Sigma_3(\sigma_3, \ell_3)),
 \end{align}
 
 where $x_{k_1} < c_l \leq x_{k_1 + 1}$ and $x_{k_2} < c_l \leq x_{k_2 + 1}$  Here, $x_{1:k}$ denotes the column vector $(x_1, x_2, ..., x_n)^\top$, and $\mathbb{1}$ denotes the vector of ones. Indpendence is assumed between each of these three distributions for simplicity. 
 
 Thus the parameters that need to be estimated include the four mean parameters in the GEAs, the six covariance parameters (two for each of the three areas), and the two changepoint parameters, $c_l$ and $c_r$. 
 
-The above model encapsulates the essence of the approach. However, there are a few difficulties. The first difficulty is that there are not always two GEAs in a particular land. There may be one GEA, or the land may only consist of the LEA. Thus, the above model is actually conditional on there being two GEAs in the data. We also define models for when there is one GEA on the left, one GEA on the right, or no GEAs. The models are defined in an essentially identical way. The left GEA model is defined as, 
+The above model encapsulates the essence of the approach. However, there are a few difficulties. The first difficulty is that there are not always two GEAs in a particular land. There may be one GEA, or the land may only consist of the LEA. Thus, the above model is actually conditional on there being two GEAs in the data. We also define models for when there is one GEA on the left, one GEA on the right, or no GEAs. The models are defined in an essentially identical way. Conditional on there being only one GEA, the left GEA model is defined as, 
 
 \begin{align}
-(Y(x_1), Y(x_2), ..., Y(x_{k})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
-(Y(x_{k + 1}), Y(x_{k + 2}), ..., Y(x_{n})) &\sim N(0, \Sigma_2(\sigma_2, \ell_2)).
+(Y(x_1), Y(x_2), ..., Y(x_{k})) &\sim N(\beta_{0}\mathbb{1} + \beta_{1} x'_{1:k}, \Sigma_1(\sigma_1, \ell_1)) \\
+(Y(x_{k + 1}), Y(x_{k + 2}), ..., Y(x_{n})) &\sim N(0, \Sigma_2(\sigma_2, \ell_2)),
 \end{align}
 
-The right GEA model is defined as, 
+and the right GEA model is defined as, 
 
+\begin{align}
+(Y(x_{1}), Y(x_{2}), ..., Y(x_{k})) &\sim N(0, \Sigma_1(\sigma_1, \ell_1)) \\ 
+(Y(x_{k + 1}), Y(x_{k + 2}), ..., Y(x_n)) &\sim N(\beta_{0}\mathbb{1} + \beta_{1} x'_{k + 1:n} \Sigma_2(\sigma_2, \ell_2)).
+\end{align}
 
+Finally, conditional on there being no GEAs in the data, the model is simply 
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+\begin{align}
+(Y(x_{1}), Y(x_{2}), ..., Y(x_{n})) &\sim N(0, \Sigma(\sigma, \ell)).
+\end{align}
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+Thus, estimating the changepoint locations also involves selecting the most appropriate model. In order to avoid confusion, we have slightly abused notation and, for example, $\Sigma_1(\sigma_1, \ell_1)$ as it is estimated in the two changepoint model is *not* the same as $\Sigma_1(\sigma_1, \ell_1)$ from the one changepoint model. Assuming that there is a left GEA, one would expect these two covariance matrices to be the same, but this is not enforced in the model, as this would significantly complicate the estimation procedure. 
 
-## Vignette Info
+For clarity, ultimately, these above four models are each individually fitted, and priors are put on the number changepoints (and on whether the changepoint is to the left or right in the one changepoint model). From there, we do model selection in the formal Bayesian way, selecting the most probable number of changepoints. At this point, we select a suitable estimator for the changepoint locations (we will use the maximum a posterior estimate). 
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+In order to complete a Bayesian model specification, we need priors on each of the parameters in each model as well as each model. We will assume independence between each parameter a priori. For each length scale $\ell$, we will assume $\ell \sim \text{Gamma}(3,5)$. For each standard deviation, we will assume $\sigma \sim \text{Half-Normal}^{+}(0,1)$, where $\text{Half-Normal}^{+}(\cdot,\cdot)$ is notation for the normal distribution restricted to the positive real numbers. For intercept parameters, $\beta_{01}, \beta_{02}, \beta_0 \sim N(0, 10)$. For the slope parameters, the preceding trend deviates slightly. For any slope that corresponds to the left GEA, $\beta_1$ or $\beta_{01}$, we will assume that the slope can not be positive. That is, $\beta_1, \beta_{01} \sim \text{Half-Normal}^{-}(0,10)$, where $\text{Half-Normal}^{-}(\cdot, \cdot)$ is notation for the normal distribution restricted to the negative real numbers. Lastly, we assume a uniform prior over all four models.
 
-## Styles
+# Estimation
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+As was noted in Stephens 1994 (citation needed), for any model including a changepoint, the likelihood is not a smooth function of the changepoint location. This is because, holding all other parameters fixed, shifting the changepoint value will result in zero change to the likelihood until it crosses the nearest point to the right or left, at which point the likelihood makes a jump. This makes maximum likelihood estimation infeasible, but Bayesian estimation can be done in a fairly straightforward way via Gibbs sampling. The basic idea is that, for each model, we can construct a two step Gibbs sampler. In step 1 we sample from the posterior distribution of the mean and covariance parameters given the changepoint locations, and in step 2 we sample from the changepoint locations given the mean and covariance parameters. Because of the non-conjugacy in our model, we perform both sampling steps using a random walk Metropolis (RWM) step.  
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
