@@ -33,6 +33,7 @@
 #' @param verbose Logical value indicating whether to print the iteration number and the parameter proposals.
 #' @return A named list containing the sampled parameters, acceptance rates for the Metropolis steps,
 #' log likelihood values, and proposal variance for the changepoints.
+#' @importFrom mvtnorm rmvnorm
 #' @export
 cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, tol_cp = 1000, warmup = 5000, verbose = FALSE)
 {

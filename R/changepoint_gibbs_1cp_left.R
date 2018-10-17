@@ -26,6 +26,7 @@
 #' "iter". "accept" gives the proportion of accepted proposals after warmup. "lp" is a vector of
 #' values of the log data pdf at each sampled parameter value. "gp_prop_var" and "cp_prop_var" are
 #' the tuned proposal variances for the metropolis steps.
+#' @importFrom stats median dgamma dnorm runif rnorm
 #' @export
 cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 5000, verbose = FALSE)
 {

@@ -16,6 +16,7 @@
 #' @return A named list. "parameters" is a list of named parameter values each of which is a vector of length
 #' "iter". "accept" gives the proportion of accepted proposals after warmup. "lp" is a vector of
 #' values of the log data pdf at each sampled parameter value.
+#' @importFrom stats dgamma dnorm runif var
 #' @export
 
 cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose = FALSE)

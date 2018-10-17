@@ -51,6 +51,7 @@
 #' @return A named list containing the output from variable_cp_gibbs function, the range of
 #' data that was actually used for the changepoint algorithm (since it doesn't impute values
 #' past the outermost non-missing values), and the estimated groove locations.
+#' @importFrom stats complete.cases
 #' @export
 
 detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE,

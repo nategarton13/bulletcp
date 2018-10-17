@@ -8,6 +8,8 @@
 #' @param tol Tolerance level for the maximum likelihood procedure to fit the Gaussian process.
 #' @return Standard optim output. The first optimized parameter value is the standard deviation
 #'   the second is the length scale.
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom stats optim
 #' @export
 mlgp <- function(y,x,tol = 1e-6)
 {
