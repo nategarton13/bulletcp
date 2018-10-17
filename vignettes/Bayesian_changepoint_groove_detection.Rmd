@@ -8,6 +8,12 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
 
 This package implements a Bayesian changepoint detection algorithm of the flavor found in "Bayesian Retrospective Multiple-Changepoint Identification" by D.A. Stephens in JRSS-c from 1994. This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
 
@@ -33,22 +39,28 @@ ggplot(data = d) +
 
 The idea behind the changepoint approach is that within either the left GEA, right GEA, or the LEA, the global structure is consistent and can either be described by a line with zero slope, a line with positive slope for the right GEA, or a line with negative slope for the left GEA. The best fitting statistical model, in terms of the magnitude of the likelihood, should then be the one which assumes that the points at which the global structure changes align with where the GEA and LEA meet. In practice there are also complex additional patterns which may result from a number of reasons, but this large scale structural assumption remains generally reasonable. The complex smaller scale patterns can be thought of as the dependence in the data after accounting for the global structure. 
 
-Before introducing the model, we introduce some notation. First, let ${Y(x_i): i = 1,2, ..., n}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. The data model that we consider is then, 
+Before introducing the model, we introduce some notation. First, let ${Y(x_i): i = 1,2, ..., n}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. For simplicity, also assume that $x_1 < x_2 < ... < x_n$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. As mentioned in the previous paragraph, the complex small scale patterns, such as the stria, will be modeled through a covariance structure on the data that will be allowed to differ between each GEA and between the GEAs and LEA. We will construct the covariance matrices from the exponential covariance function $K(t, t';\sigma, \ell) = \sigma^2 e^{-\frac{|t - t'|}{\ell}}$. The differences in covariance matrices for the GEAs and LEA will be reflected in the parameters $\sigma$ and $\ell$. The data model that we consider is then, 
 
 \begin{align}
-(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01} + \beta_{11} x_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
+(Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
 (Y(x_{k_1 + 1}), Y(x_{k_1 + 2}), ..., Y(x_{k_2})) &\sim N(0, \Sigma_2(\sigma_2, \ell_2)) \\ 
-(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) &\sim N(\beta_{02} + \beta_{12} x_{k_2 + 1:n} \Sigma_3(\sigma_3, \ell_3)).
+(Y(x_{k_2 + 1}), Y(x_{k_2 + 2}), ..., Y(x_n)) &\sim N(\beta_{02}\mathbb{1} + \beta_{12} x_{k_2 + 1:n} \Sigma_3(\sigma_3, \ell_3)),
 \end{align}
 
-Here, $x_{1:k}$ denotes the column vector $(x_1, x_2, ..., x_n)^\top$. Indpendence is assumed between each of these three distributions for simplicity. Each of the matrices $\Sigma_i(\sigma_i, \ell_i)$ is constructed from the exponential covariance function $K(t, t';\sigma_i, \ell_i) = \sigma_i^2 e^{-\frac{|t - t'|}{\ell_i}}$. As an example, the covariance between $x_1$ and $x_{k_1}$ is $K(x_1, x_{k_1}; \sigma_1, \ell_1)$.  
+where $x_{k_1} < c_l \leq x_{k_1 + 1}$ and $x_{k_2} < c_l \leq x_{k_2 + 1}$  Here, $x_{1:k}$ denotes the column vector $(x_1, x_2, ..., x_n)^\top$, and $\mathbb{1}$ denotes the vector of ones. Indpendence is assumed between each of these three distributions for simplicity. 
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+Thus the parameters that need to be estimated include the four mean parameters in the GEAs, the six covariance parameters (two for each of the three areas), and the two changepoint parameters, $c_l$ and $c_r$. 
+
+The above model encapsulates the essence of the approach. However, there are a few difficulties. The first difficulty is that there are not always two GEAs in a particular land. There may be one GEA, or the land may only consist of the LEA. Thus, the above model is actually conditional on there being two GEAs in the data. We also define models for when there is one GEA on the left, one GEA on the right, or no GEAs. The models are defined in an essentially identical way. The left GEA model is defined as, 
+
+\begin{align}
+(Y(x_1), Y(x_2), ..., Y(x_{k})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
+(Y(x_{k + 1}), Y(x_{k + 2}), ..., Y(x_{n})) &\sim N(0, \Sigma_2(\sigma_2, \ell_2)).
+\end{align}
+
+The right GEA model is defined as, 
+
+
 
 Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
 
