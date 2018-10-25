@@ -228,9 +228,9 @@ cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_ed
   ## note that the proposal variance is tuned with the second half of the warmup iterations
   ## note also that I add a small bump to the proposal variances in the case that all of the
   ## warmup proposals were rejected
-  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-5 * diag(4)
-  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(2)
-  cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 1 + 1e-5
+  prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-1 * diag(4)
+  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-1 * diag(2)
+  cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 1 + 1
 
   ## reinitialize parameter list
   lp <- numeric()
