@@ -48,14 +48,14 @@
 
 
 ## function to get the conditional posterior given 0,1,2 changepoints
-variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
+variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 20, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
 {
   ## If some function arguments (starting values/proposal variances are unspecified)
   ## choose generic arguments
   if(is.na(start.vals))
   {
-    cp_sval_left <- min(data$x) + 100
-    cp_sval_right <- max(data$x) - 100
+    cp_sval_left <- min(data$x) + tol_edge + 10
+    cp_sval_right <- max(data$x) - tol_edge - 10
     start.vals <- list("cp2" = list("sigma" = c(1,1,1), "l" = c(10,10,10), "cp" = c(cp_sval_left,cp_sval_right), "beta" = c(-2,2), "intercept" = c(0,0)),
                        "cp1" = list("left" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_left), "beta" = c(-1), "intercept" = c(0)),
                                     "right" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_right), "beta" = c(1), "intercept" = c(0))),
@@ -86,7 +86,8 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
   ## one changepoint model
   cp1_dsn <- cp1_gibbs_v2(data = data, iter = iter, start.vals.left = start.vals$cp1$left, start.vals.right = start.vals$cp1$right,
                           prop_var_left = prop_var$cp1$left, prop_var_right = prop_var$cp1$right, cp_prop_var = cp_prop_var$cp1, tol_edge = tol_edge, warmup = warmup, verbose = verbose)
-  cp_list$cp1 <- list("ppleft" = cp1_dsn$ppleft, "ppright" = cp1_dsn$ppright, "left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
+  ##cp_list$cp1 <- list("ppleft" = cp1_dsn$ppleft, "ppright" = cp1_dsn$ppright, "left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
+  cp_list$cp1 <- list("left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
   mcp1 <- 0.5 * mean(exp(cp1_dsn$lp$left)) + 0.5 * mean(exp(cp1_dsn$lp$right))
   map_cp1_left <- as.numeric(cp1_dsn$left_parameters$cp)[which.max(cp1_dsn$lpost$left)]
   map_cp1_right <- as.numeric(cp1_dsn$right_parameters$cp)[which.max(cp1_dsn$lpost$right)]

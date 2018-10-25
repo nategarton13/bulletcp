@@ -54,7 +54,7 @@
 #' @importFrom stats complete.cases
 #' @export
 
-detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE,
+detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 20, tol_cp = 1000, warmup = 200, verbose = FALSE,
                          prior_numcp = rep(1/4, times = 4), est_impute_par = FALSE, impute_par = c(0.8,15))
 {
   ## put extra functions in here just in case
@@ -70,11 +70,12 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 
   ######### end extra functions
 
-  ## this is because hamby44_eval$ccdata_w_resid is actually a list with one element
-  data <- data[[1]]
+  ## the line immediately below should not be necessary
+  # ## this is because hamby44_eval$ccdata_w_resid is actually a list with one element
+  # data <- data[[1]]
 
   ## make range of x data equal to the range of non NA points
-  d <- data.frame("x" = data$y, "y" = scale(data$rlo_resid))
+  d <- data.frame("x" = data$x, "y" = scale(data$y))
   max_x_notNA <- max(d$x[!is.na(d$y)])
   min_x_notNA <- min(d$x[!is.na(d$y)])
   d <- d[d$x >= min_x_notNA & d$x <= max_x_notNA,]
@@ -124,3 +125,45 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
   return(list("changepoint_results" = test_variable_cp_gibbs, "cutoffs" = range(nud$x), "grooves" = grooves))
 }
 
+#'  Conforming get_grooves_"name" function.
+#'
+#' This is a wrapper function that comforms to the other get_grooves functions.
+#'
+#' @param x
+#' @param value
+#' @param adjust
+#' @param ... Additional arguments to be passed to detect_cp_v2.
+#' @return A named list containing the output from variable_cp_gibbs function, the range of
+#' data that was actually used for the changepoint algorithm (since it doesn't impute values
+#' past the outermost non-missing values), and the estimated groove locations.
+#' @importFrom stats complete.cases
+#' @export
+
+get_grooves_bcp(x, value, adjust, ...)
+{
+  ## get robust loess residuals
+  land <- data.frame(x = x, value = value)
+  original_land <- land
+
+  ## generate additional variables
+
+  check_min <- min(land$value[!is.na(land$value)])
+  land <- mutate(land, value_std = value - check_min)
+  #install.packages("locfit")
+  #library(locfit)
+  robust_loess_fit <- locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
+  land$rlo_pred <- predict(robust_loess_fit, newdata = land)
+  land$rlo_resid <- with(land, value_std-rlo_pred)
+
+  ## create data frame to be passed to detect_cp_v2
+  data <- data.frame("x" = land$x, "y" = land$rlo_resid)
+
+  cp_results <- detect_cp_v2(data = data)
+
+  ## groove locations plus adjustment
+  groove <- cp_results$grooves + c(cp_results$grooves[1] + adjust, cp_results$grooves[2] - adjust)
+
+
+  return(list(groove = groove, "changepoint_samples" = cp_results$posterior_cp))
+
+}
