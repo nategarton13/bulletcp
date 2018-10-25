@@ -5,7 +5,7 @@
 \title{Estimate posterior distributions for the 0, 1, or 2 changepoint case.}
 \usage{
 variable_cp_gibbs_v2(data, iter = 8000, start.vals = NA,
-  prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000,
+  prop_var = NA, cp_prop_var = NA, tol_edge = 20, tol_cp = 1000,
   warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
 }
 \arguments{

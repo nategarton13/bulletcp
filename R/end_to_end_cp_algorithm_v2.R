@@ -98,6 +98,8 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
   test_variable_cp_gibbs <- variable_cp_gibbs_v2(data = nud,
                                                           start.vals = start.vals,
                                                           prop_var = prop_var, cp_prop_var = cp_prop_var, verbose = FALSE, tol_edge = tol_edge, tol_cp = tol_cp, iter = iter, warmup = warmup, prior_numcp = prior_numcp)
+  ## note that the order that the MAPs are returned in
+  ## is 2cp, 1cp left , 1cp right
   if(which.max(test_variable_cp_gibbs$max_lpost) == 1)
   {
     grooves <- range(nud$x)
@@ -129,9 +131,10 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #'
 #' This is a wrapper function that comforms to the other get_grooves functions.
 #'
-#' @param x
-#' @param value
-#' @param adjust
+#' @param x numeric vector of locations in microns
+#' @param value numeric vector of surface measurements in microns
+#' @param adjust positive number to adjust the grooves - XXX should be
+#'          expressed in microns rather than an index
 #' @param ... Additional arguments to be passed to detect_cp_v2.
 #' @return A named list containing the output from variable_cp_gibbs function, the range of
 #' data that was actually used for the changepoint algorithm (since it doesn't impute values
@@ -139,7 +142,7 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #' @importFrom stats complete.cases
 #' @export
 
-get_grooves_bcp(x, value, adjust, ...)
+get_grooves_bcp <- function(x, value, adjust, ...)
 {
   ## get robust loess residuals
   land <- data.frame(x = x, value = value)
@@ -158,12 +161,12 @@ get_grooves_bcp(x, value, adjust, ...)
   ## create data frame to be passed to detect_cp_v2
   data <- data.frame("x" = land$x, "y" = land$rlo_resid)
 
-  cp_results <- detect_cp_v2(data = data)
+  cp_results <- detect_cp_v2(data = data, ...)
 
   ## groove locations plus adjustment
-  groove <- cp_results$grooves + c(cp_results$grooves[1] + adjust, cp_results$grooves[2] - adjust)
+  groove <- c(cp_results$grooves[1] + adjust, cp_results$grooves[2] - adjust)
 
 
-  return(list(groove = groove, "changepoint_samples" = cp_results$posterior_cp))
+  return(list(groove = groove, "changepoint_samples" = cp_results$changepoint_results))
 
 }
