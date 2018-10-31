@@ -143,6 +143,9 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #' @importFrom stats predict
 #' @importFrom dplyr mutate
 #' @importFrom locfit locfit.robust
+#' @importFrom stats loess
+#' @importFrom assertthat assert_that
+#' @importFrom assertthat has_name
 #' @export
 
 get_grooves_bcp <- function(x, value, adjust, ...)
@@ -157,9 +160,36 @@ get_grooves_bcp <- function(x, value, adjust, ...)
   land <- dplyr::mutate(land, value_std = value - check_min)
   #install.packages("locfit")
   #library(locfit)
-  robust_loess_fit <- locfit::locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
-  land$rlo_pred <- stats::predict(robust_loess_fit, newdata = land)
-  land$rlo_resid <- with(land, value_std-rlo_pred)
+
+  ## Kiegan's/Susan's robust loess fit function
+  robust_loess_fit <- function(cc, iter) {
+    assert_that(has_name(cc, "x"), has_name(cc, "value_std"))
+    n <- nrow(cc)
+    weights <- rep(1, n)
+    fit <- loess(value_std ~ x, data = cc, span = 1)
+    cc$fit <- predict(fit, newdata = cc)
+    cc$resid <- cc$value_std - cc$fit
+    i <- 1
+    while (i < iter) {
+      mar <- median(abs(cc$resid), na.rm = T)
+      cc$bisq <- pmax(1 - (cc$resid / (6 * mar))^2, 0)^2
+      weights <- ifelse(cc$resid > 0, cc$bisq, 1)
+      fit <- loess(value_std ~ x, data = cc, span = 1, weights = weights)
+      cc$fit <- predict(fit, newdata = cc)
+      cc$resid <- cc$value_std - cc$fit
+      i <- i + 1
+    }
+    return(fit)
+  }
+
+  rlo_fit <- robust_loess_fit(cc = land, iter = 20)
+  land$rlo_pred <- predict(rlo_fit, newdata = land)
+  land$rlo_resid <- land$value_std - land$rlo_pred
+
+  ## old
+  # robust_loess_fit <- locfit::locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
+  # land$rlo_pred <- stats::predict(robust_loess_fit, newdata = land)
+  # land$rlo_resid <- with(land, value_std-rlo_pred)
 
   ## create data frame to be passed to detect_cp_v2
   data <- data.frame("x" = land$x, "y" = land$rlo_resid)
