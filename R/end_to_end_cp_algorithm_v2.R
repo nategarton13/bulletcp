@@ -140,6 +140,9 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #' data that was actually used for the changepoint algorithm (since it doesn't impute values
 #' past the outermost non-missing values), and the estimated groove locations.
 #' @importFrom stats complete.cases
+#' @importFrom stats predict
+#' @importFrom dplyr mutate
+#' @importFrom locfit locfit.robust
 #' @export
 
 get_grooves_bcp <- function(x, value, adjust, ...)
