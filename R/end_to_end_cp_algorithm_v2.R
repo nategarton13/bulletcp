@@ -154,7 +154,7 @@ get_grooves_bcp <- function(x, value, adjust, ...)
   land <- mutate(land, value_std = value - check_min)
   #install.packages("locfit")
   #library(locfit)
-  robust_loess_fit <- locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
+  robust_loess_fit <- locfit::locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
   land$rlo_pred <- predict(robust_loess_fit, newdata = land)
   land$rlo_resid <- with(land, value_std-rlo_pred)
 
