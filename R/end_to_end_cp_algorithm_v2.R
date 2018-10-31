@@ -151,11 +151,11 @@ get_grooves_bcp <- function(x, value, adjust, ...)
   ## generate additional variables
 
   check_min <- min(land$value[!is.na(land$value)])
-  land <- mutate(land, value_std = value - check_min)
+  land <- dplyr::mutate(land, value_std = value - check_min)
   #install.packages("locfit")
   #library(locfit)
   robust_loess_fit <- locfit::locfit.robust(value_std~x, data = land, alpha = 1, kern = "tcub")
-  land$rlo_pred <- predict(robust_loess_fit, newdata = land)
+  land$rlo_pred <- stats::predict(robust_loess_fit, newdata = land)
   land$rlo_resid <- with(land, value_std-rlo_pred)
 
   ## create data frame to be passed to detect_cp_v2
