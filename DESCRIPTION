@@ -1,11 +1,15 @@
 Package: bulletcp
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Title: Automatic groove identification via Bayesian changepoint detection.
+Version: 0.1.1
+Author: Nate Garton
+Maintainer: Nate Garton <nate.garton13@gmail.com>
+Description: This package is designed as a dependency to bulletxtrctr,
+    which contains functionality to match bullet lands from 3D scans. The bullet matching algorithm
+    involves removing data from the groove engraved areas of bullets, and hence groove location identification
+    is performed as a data preprocessing step. The bulletcp package includes the functions necessary to 
+    perform the groove identification task via a Bayesian changepoint detection method. This will simply be an option
+    in the bulletxtrctr function which identifies the groove locations.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
