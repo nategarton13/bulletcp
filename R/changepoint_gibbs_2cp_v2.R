@@ -264,7 +264,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge
   ###########################################################
   ## tune metropolis proposal variances
   prop_var[[1]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,1], par$l[round(warmup/2):warmup,1], par$beta[round(warmup/2):warmup,1], par$intercept[round(warmup/2):warmup,1])) / 4 + 1e-1 * diag(4)
-  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2),2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-5 * diag(2)
+  prop_var[[2]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2),2], par$l[round(warmup/2):warmup,2])) / 2 + 1e-1 * diag(2)
   prop_var[[3]] <- 2.4^2 * var(cbind(par$sigma[round(warmup/2):warmup,3], par$l[round(warmup/2):warmup,3], par$beta[round(warmup/2):warmup,2], par$intercept[round(warmup/2) : warmup, 2])) / 4 + 1e-1 * diag(4)
   cp_prop_var <- 2.4^2 * var(par$cp[round(warmup/2):warmup,]) / 2 + 1 * diag(2)
 
