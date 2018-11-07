@@ -29,7 +29,7 @@
 #' @return A named list with all of the output that the left and right changepoint functions produce
 #' individually plus the posterior means of the left and right changepoints.
 #' @export
-cp1_gibbs_v2 <- function(data, iter, start.vals.left, start.vals.right, prop_var_left, prop_var_right, cp_prop_var, tol_edge = 10, warmup = 5000, verbose = FALSE)
+cp1_gibbs_v2 <- function(data, iter, start.vals.left, start.vals.right, prop_var_left, prop_var_right, cp_prop_var, tol_edge = 10, warmup = 500, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 

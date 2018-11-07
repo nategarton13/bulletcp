@@ -28,7 +28,7 @@
 #' the tuned proposal variances for the metropolis steps.
 #' @importFrom stats median dgamma dnorm runif rnorm
 #' @export
-cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 5000, verbose = FALSE)
+cp1_gibbs_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 500, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 

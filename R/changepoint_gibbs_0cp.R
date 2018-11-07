@@ -19,7 +19,7 @@
 #' @importFrom stats dgamma dnorm runif var
 #' @export
 
-cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 5000, verbose = FALSE)
+cp0_gibbs <- function(data, iter, start.vals, prop_var, warmup = 500, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 
