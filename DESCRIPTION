@@ -16,7 +16,8 @@ LazyData: true
 RoxygenNote: 6.1.0
 Depends: mvtnorm,
     dplyr,
-    stats
+    stats,
+    assertthat
 Suggests: knitr,
     rmarkdown,
     ggplot2
