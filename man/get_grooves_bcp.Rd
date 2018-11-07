@@ -4,7 +4,7 @@
 \alias{get_grooves_bcp}
 \title{Conforming get_grooves_"name" function.}
 \usage{
-get_grooves_bcp(x, value, adjust, ...)
+get_grooves_bcp(x, value, adjust = 10, ...)
 }
 \arguments{
 \item{x}{numeric vector of locations in microns}

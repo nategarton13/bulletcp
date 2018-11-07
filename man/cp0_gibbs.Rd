@@ -4,7 +4,7 @@
 \alias{cp0_gibbs}
 \title{Estimate a posterior distribution of data conditional on zero changepoints.}
 \usage{
-cp0_gibbs(data, iter, start.vals, prop_var, warmup = 5000,
+cp0_gibbs(data, iter, start.vals, prop_var, warmup = 500,
   verbose = FALSE)
 }
 \arguments{

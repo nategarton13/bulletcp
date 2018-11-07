@@ -5,7 +5,7 @@
 \title{Estimate a posterior distribution of data conditional that there are two grooves.}
 \usage{
 cp2_gibbs_v2(data, iter, start.vals, prop_var, cp_prop_var,
-  tol_edge = 50, tol_cp = 1000, warmup = 5000, verbose = FALSE)
+  tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the

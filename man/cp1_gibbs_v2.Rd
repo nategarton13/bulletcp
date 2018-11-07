@@ -5,7 +5,7 @@
 \title{Estimate a posterior distribution of data conditional that there is one groove.}
 \usage{
 cp1_gibbs_v2(data, iter, start.vals.left, start.vals.right, prop_var_left,
-  prop_var_right, cp_prop_var, tol_edge = 10, warmup = 5000,
+  prop_var_right, cp_prop_var, tol_edge = 10, warmup = 500,
   verbose = FALSE)
 }
 \arguments{

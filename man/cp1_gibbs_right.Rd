@@ -5,7 +5,7 @@
 \title{Estimate a posterior distribution of data conditional on a left groove and no right groove.}
 \usage{
 cp1_gibbs_right(data, iter, start.vals, prop_var, cp_prop_var,
-  tol_edge = 50, warmup = 5000, verbose = FALSE)
+  tol_edge = 50, warmup = 500, verbose = FALSE)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the
