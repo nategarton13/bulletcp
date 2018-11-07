@@ -145,7 +145,7 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #' @importFrom stats loess
 #' @export
 
-get_grooves_bcp <- function(x, value, adjust, ...)
+get_grooves_bcp <- function(x, value, adjust = 10, ...)
 {
   ## get robust loess residuals
   land <- data.frame(x = x, value = value)
