@@ -143,6 +143,8 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
 #' @importFrom stats predict
 #' @importFrom dplyr mutate
 #' @importFrom stats loess
+#' @importFrom assertthat assert_that
+#' @importFrom assertthat has_name
 #' @export
 
 get_grooves_bcp <- function(x, value, adjust = 10, ...)
