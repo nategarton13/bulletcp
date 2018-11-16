@@ -106,7 +106,7 @@ The second preprocessing step is a bit more involved. In order to enable the alg
 We perform the imputation by treating the observations as coming from an unknown function, and infer the missing values from the known function values. In order to do this, we model the data with a Gaussian process and the squared exponential covariance function. That is, we suppose that 
 
 \[
-Y(s) \sim \mathcal{GP}(0, K(t,t';\sigma^2, \ell)),
+Y(t) \sim \mathcal{GP}(0, K(t,t';\sigma^2, \ell)),
 \]
 
 where now $K(t,t';\sigma^2, \ell) = \sigma^2 e^{-(t - t)^2/(2\ell^2)}$ is the squared exponential covariance function. We emphasize for clarity that this is a different covariance function than we use in the changepoint model. The main reason for this is that in imputing values, it seems desireable to allow dependencies beyond immediately neighboring points to influence predictions as the function that we are trying to predict generally has a smooth global structure.
