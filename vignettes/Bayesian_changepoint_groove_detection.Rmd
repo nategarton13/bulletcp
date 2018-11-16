@@ -101,5 +101,24 @@ After running the MCMC for each model, parameter estimates and the most likely m
 
 Before running the analysis described above, we first perform two data preprocessing steps. The first step is to scale the residuals from the robust loess procedure by the standard deviation calculated from the entire set of residuals. The reason for this is simply to make priors for standard deviation and slope parameters easier to specify. For example, ensuring that the residuals are scaled to have standard deviation one means that the standard deviation parameters in our model should also be close to one. This scaling also ensures that slopes values are not very large. 
 
-The second preprocessing step is a bit more involved. 
+The second preprocessing step is a bit more involved. In order to enable the algorithm to run reasonably fast, we need to take advantage of the sparse precision matrix structure that is induced by the covariance function we chose. Indeed, this was the reason for choosing this covariance function in the first place. Unfortunately, it is challenging to do this unless the observations are evenly spaced in the domain. In our case, this would be true if there were no missing values. In order to remedy this problem, we impute the missing data, but only in the case that there exist nonmissing observations outside of the missing values. In the case that the missing values exist on the edges of the data, we simply do not consider those domain values in the model. 
 
+We perform the imputation by treating the observations as coming from an unknown function, and infer the missing values from the known function values. In order to do this, we model the data with a Gaussian process and the squared exponential covariance function. That is, we suppose that 
+
+\[
+Y(s) \sim \mathcal{GP}(0, K(t,t';\sigma^2, \ell)),
+\]
+
+where now $K(t,t';\sigma^2, \ell) = \sigma^2 e^{-(t - t)^2/(2\ell^2)}$ is the squared exponential covariance function. We emphasize for clarity that this is a different covariance function than we use in the changepoint model. The main reason for this is that in imputing values, it seems desireable to allow dependencies beyond immediately neighboring points to influence predictions as the function that we are trying to predict generally has a smooth global structure.
+
+In the changepoint algorithm, we do allow the user to choose to estimate the Gaussian process parameters via maximum likelihood, which just uses the ```optim()``` function. However, we do not use the full set of data to estimate the parameters, as there is still too much to do estimation reasonably quickly. For this reason, we take a subset of the data chosen by selecting every 20-th point starting at the first observed location. This still provides plenty of data to estimate the covariance parameters well. However, we also supply default covariance parameter values so that estimation of these parameters is not necessary. These values were estimated from a representative bullet land, and we suspect that they will almost always work sufficiently well in practice. 
+
+When we impute the missing values, we use the estimated or default covariance parameter values and *all* of the observed data and compute the conditional mean of the missing values. To be clear, denote the distribution of the observed and missing data as 
+
+\[ 
+(Y,Y^*)^\top \sim N\left( \begin{bmatrix} 0 \\ 0 \end{bmatrix}, \begin{bmatrix} \Sigma_{yy} & \Sigma_{yy^*} \\ \Sigma_{y^*y} & \Sigma_{y^*y^*}\end{bmatrix} \right).
+\]
+
+Here, $Y$ is observed data and $Y^*$ is the missing data, and the covariance matrix above is constructed from the squared exponential covariance function and the estimated or default covariance parameter values. We then use normal distribution theory to calculate the imputed values 
+
+\[ E(Y^*|Y = y) = \Sigma_{y^*y} \Sigma_{yy}^{-1}y \]. 
