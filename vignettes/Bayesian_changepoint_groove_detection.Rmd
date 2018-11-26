@@ -226,9 +226,9 @@ ggplot(data = full_data) +
 
 Now that we have imputed missing values, we can proceed to estimate the number and location of any grooves. In order to do this, we can can either call the function ```variable_cp_gibbs_v2()```, which, in turn, calls functions for running separate Gibbs sampling algorithms in the 0, 1, or 2 changepoint cases, or we can call each of these functions individually. To clearly demonstrate what is going on, we will call each of the necessary functions directly. The only things that we really care about are the estimated groove locations, as well as the maximum value of the log posterior density (which occurs at the estimated groove locations). The latter will enable us to choose the number and location of any possible grooves while the former actually provides the estimated groove locations in each model. 
 
-First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the Gibbs sampler in this case is called ```changepoint_gibbs_0cp```. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function called ```lognormal_ou_pdf``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every Gibbs sampler we employ.
+First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is called ```cp0_gibbs```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are actually Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function called ```lognormal_ou_pdf``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
 
-```{r gibbs_0cp, echo = TRUE, cache=FALSE}
+```{r cp0_gibbs, echo = TRUE, cache=FALSE}
 # log pdf of a normal distribution with the type of covariance matrix described in the model
 lognormal_ou_pdf <- function(x, mu, sigma, l)
   {
@@ -240,4 +240,15 @@ lognormal_ou_pdf <- function(x, mu, sigma, l)
                                                 - 2 * rho * sum((x[1:(n-1)] - mu[1:(n-1)]) * (x[2:n] - mu[2:n]))))
 }
 
+# define starting values 
+start.vals <- list("sigma" = c(1), "l" = c(10))
+
+# proposal variance for the MH step
+prop_var <- diag(c(1/2,1/2))
+
+## run the RWMH sampler for the zero changepoint model
+m0cp <- cp0_gibbs(data = full_data, iter = 5000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
+
+## print maximum value of the (conditional) log posterior up to the normalizing constant
+max(m0cp$lpost)
 ```
