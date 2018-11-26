@@ -131,7 +131,9 @@ First, we read in the data. These data are an example of an average of several 2
 
 ```{r raw_data, echo=TRUE, cache=TRUE, fig.cap="\\label{f:raw_data} A plot of an averaged cross cut from a 3D bullet land scan."}
 library(ggplot2)
-raw_data <- read.csv(file = "C:/Users/Nate/Documents/CSAFE/Bullets/bulletcp/bulletcp/example_data.csv")
+library(bulletcp)
+
+data("example_data")
 head(raw_data)
 
 ggplot(data = raw_data) +
@@ -196,9 +198,6 @@ d <- d[d$x >= min_x_notNA & d$x <= max_x_notNA,]
 
 Once the data have been scaled, we take a subset of them by selecting every 20-th point to use when estimating the Gaussian process parameters. Then, we estimate these parameters using the ```mlgp()``` function in this package. 
 ```{r estimate_gp_par, echo = TRUE, cache=TRUE}
-## load the bulletcp package
-library(bulletcp)
-
 # subset data
 temp_d <- d[seq(from = 1, to = nrow(d),by = 20),]
 
