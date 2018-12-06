@@ -187,7 +187,7 @@ temp_d <- temp_d[complete.cases(temp_d),]
 # estimate the MLE's 
 mles <- mlgp(y = temp_d$y, x = temp_d$x)
 
-# call MLE's impute_par
+# name MLE's impute_par
 impute_par <- exp(mles$par)
 impute_par
 ```
@@ -206,7 +206,9 @@ ggplot(data = full_data) +
 
 Now that we have imputed missing values, we can proceed to estimate the number and location of any grooves. In order to do this, we can can either call the function ```variable_cp_gibbs_v2()```, which, in turn, calls functions for running separate Gibbs sampling algorithms in the 0, 1, or 2 changepoint cases, or we can call each of these functions individually. To clearly demonstrate what is going on, we will call each of the necessary functions directly. The only things that we really care about are the estimated groove locations, as well as the maximum value of the log posterior density (which occurs at the estimated groove locations). The latter will enable us to choose the number and location of any possible grooves while the former actually provides the estimated groove locations in each model. 
 
-First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is called ```cp0_gibbs```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are always Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function called ```lognormal_ou_pdf``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
+### Model with no GEAs
+
+First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is named ```cp0_gibbs()```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are always Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function named ```lognormal_ou_pdf()``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
 
 ```{r cp0_gibbs, echo = TRUE, cache=FALSE}
 # log pdf of a normal distribution with the type of covariance matrix described in the model
@@ -226,14 +228,150 @@ start.vals <- list("sigma" = c(1), "l" = c(10))
 # proposal variance for the MH step
 prop_var <- diag(c(1/2,1/2))
 
-## run the RWMH sampler for the zero changepoint model
+# run the RWMH sampler for the zero changepoint model
 m0cp <- cp0_gibbs(data = full_data, iter = 5000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
 
-## print maximum value of the (conditional) log posterior up to the normalizing constant
+# print maximum value of the (conditional) log posterior up to the normalizing constant
 max(m0cp$lpost)
 ```
 
-Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are called ```cp1_gibbs_left``` and ```cp1_gibbs_right```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. 
+### Model with one GEA
+
+Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are named ```cp1_gibbs_left()``` and ```cp1_gibbs_right()```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments mostly correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. However, we must also specify the ```tol_edge``` argument which forces the potential changepoint to be a minimum distance from the edge of the data. 
+
+```{r cp1_gibbs_complicated, echo = TRUE, cache=FALSE}
+
+# define starting values for the changepoints
+cp_start_left <- min(full_data$x) + 30
+cp_start_right <- max(full_data$x) - 30
+   
+# define list of starting values for both the left and right changepoint models 
+start.vals <- list("left" = list("sigma" = c(1,1), 
+                                 "l" = c(10,10), 
+                                 "cp" = c(cp_start_left), 
+                                 "beta" = c(-1), 
+                                 "intercept" = c(0)),
+                    "right" = list("sigma" = c(1,1), 
+                                   "l" = c(10,10), 
+                                   "cp" = c(cp_start_right), 
+                                   "beta" = c(1), 
+                                   "intercept" = c(0)))
+
+# list of starting values for each of the two MH steps (not sampling the changepoint) for both the left and right changepoint models 
+prop_var <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)), 
+                               diag(c(1/2,1/2))),
+                 "right" = list(diag(c(1/2,1/2)), 
+                                diag(c(1/2,1/2,1/2, 1/2))))
+
+# define the proposal variance for the RWMH step sampling the changepoint
+cp_prop_var <- 10^2
+
+# run Gibbs MCMC for the left GEA model 
+m1cp_left <- cp1_gibbs_left(data = full_data, iter = 5000, warmup = 500, 
+                            start.vals = start.vals$left, 
+                            prop_var = prop_var$left, 
+                            cp_prop_var = cp_prop_var, 
+                            verbose = FALSE, tol_edge = 20)
+
+# run Gibbs MCMC for the right GEA model
+m1cp_right <- cp1_gibbs_right(data = full_data, iter = 5000, warmup = 500, 
+                              start.vals = start.vals$right, 
+                              prop_var = prop_var$right, 
+                              cp_prop_var = cp_prop_var, 
+                              verbose = FALSE, tol_edge = 20)
+
+# Find MAP estimates under both models of the changepoint location 
+map_cp1_left <- as.numeric(m1cp_left$parameters$cp)[which.max(m1cp_left$lpost)]
+map_cp1_right <- as.numeric(m1cp_right$parameters$cp)[which.max(m1cp_right$lpost)]
+
+# print maximum value of (conditional) log posterior up to a normalizing constant
+max(m1cp_left$lpost)
+max(m1cp_right$lpost)
+
+# Plot the data and the changepoint MAPs
+ggplot(data = full_data) +
+  geom_point(aes(x = x, y = y)) + 
+  geom_vline(aes(xintercept = map_cp1_left)) +
+  geom_vline(aes(xintercept = map_cp1_right)) +
+  theme_bw()
+
+```
+
+In the plot above, the vertical black lines correspond to the MAP estimates of the changepoint locations for each model. Also, it is clear that the left changepoint model is a better fit to the data given the fact that the maximum log posterior value (up to a constant) is larger than it is for the right changepoint model. However, both of these models appear more likely than the zero changepoint model, which has a much lower maximum log posterior value. 
+
+Note that the function ```changepoint_gibbs_1cp_v2()``` is just a wrapper for the ```changepoint_gibbs_1cp_left()``` and ```changepoint_gibbs_1cp_right()``` functions above. To use this function, starting values and proposal variances for each model are input separately. As shown below, the MAP estimates for the changepoints are very close to the estimates found from running each analysis individually as above. They will never be identical without setting a seed, as the MCMC algorithm is inherently random.
+
+```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE}
+
+# run both Gibbs MCMC algorithms for each of the single changepoint model
+m1cp <- cp1_gibbs_v2(data = full_data, iter = 5000, 
+                     start.vals.left = start.vals$left, 
+                     start.vals.right = start.vals$right,
+                     prop_var_left = prop_var$left, 
+                     prop_var_right = prop_var$right, 
+                     cp_prop_var = cp_prop_var, 
+                     tol_edge = 20, 
+                     warmup = 500, verbose = FALSE)
+
+# Find MAP estimates under both models of the changepoint location 
+map_cp1_left2 <- as.numeric(m1cp$left_parameters$cp)[which.max(m1cp$lpost$left)]
+map_cp1_right2 <- as.numeric(m1cp$right_parameters$cp)[which.max(m1cp$lpost$right)]
+
+map_cp1_left2
+map_cp1_right2
+
+```
+
+### Model with two GEAs
+Because assuming a model structure with a single GEA involves fitting two models, fitting a model taht assumes there are two GEAs is actually a bit simpler. Though it requires proposal variances and starting values for both GEAs as well as the LEA, it requires only performing one MCMC. The function that performs this sampling is named ```changepoint_gibbs_2cp_v2()```, and its use is shown in the code block below. The one additional argument specific to this function is the named ```tol_cp```. This is similar to the ```tol_edge``` argument except it specifies how close the changepoints can be to each other, not to the edge of the data. The default value for this argument is 1000, as this range is well below the range of the data. 
+
+```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE}
+# define starting values
+start.vals <- list("sigma" = c(1,1,1), 
+                   "l" = c(10,10,10), 
+                   "cp" = c(cp_start_left, cp_start_right), 
+                   "beta" = c(-2,2), 
+                   "intercept" = c(0,0))
+
+# define proposal variances (not for changepoints)
+prop_var <- list(diag(c(1/2,1/2,1/2,1/2)), 
+                 diag(c(1/2,1/2)), 
+                 diag(c(1/2,1/2,1/2,1/2)))
+
+# define proposal variance for changepoints
+cp_prop_var <- diag(c(10^2, 10^2))
+
+# run Gibbs MCMC
+m2cp <- cp2_gibbs_v2(data = full_data, 
+                     iter = 5000, 
+                     start.vals = start.vals, 
+                     prop_var = prop_var, 
+                     cp_prop_var = cp_prop_var, 
+                     tol_edge = 20, 
+                     tol_cp = 1000, 
+                     warmup = 500, 
+                     verbose = FALSE)
+
+
+# Find MAP estimates of changepoint locations
+map_cp2 <- m2cp$parameters$cp[which.max(m2cp$lpost),]
+
+# print maximum value of (conditional) log posterior up to a normalizing constant
+max(m2cp$lpost)
+
+# Plot the data and the changepoint MAPs
+ggplot(data = full_data) +
+  geom_point(aes(x = x, y = y)) + 
+  geom_vline(aes(xintercept = map_cp2[1])) +
+  geom_vline(aes(xintercept = map_cp2[2])) +
+  theme_bw()
+
+```
+
+This model has the highest maximum log posterior value, and thus will be chosen as the appropriate model for the data. Furthermore, the estimated changepoints appear to be very close to the true locations where the GEAs and the LEA meet.
+
+### Running all MCMCs with one function
+
 
 # Acknowledgements 
 We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.

@@ -143,7 +143,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[3,2] - xrange[1,1])) * beta[1] + intercept[1]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -169,7 +169,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med)/(xrange[3,2] - xrange[1,1])) * beta[2] + intercept[2]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -358,7 +358,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge
         {
           med <- median(data$x)
           mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1])) * beta[1] + intercept[1]
-          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
+          prop_mu <- ((data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1])) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
@@ -385,7 +385,7 @@ cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge
         {
           med <- median(data$x)
           mu <- (data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1]) * beta[2] + intercept[2]
-          prop_mu <- data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x / (xrange[3,2] - xrange[1,1]) * prop[3] + prop[4]
+          prop_mu <- (data[data$x <= xrange[j,2] & data$x > xrange[j,1], ]$x - med) / (xrange[3,2] - xrange[1,1]) * prop[3] + prop[4]
 
           log_accept_ratio <- lognormal_ou_pdf(x = temp_dat, mu = prop_mu, sigma = prop[1], l = prop[2]) + ## likelihood
             dgamma(x = prop[2], shape = 3, rate = 5, log = TRUE) + ## length scale
