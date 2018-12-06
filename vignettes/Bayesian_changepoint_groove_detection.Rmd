@@ -233,7 +233,7 @@ m0cp <- cp0_gibbs(data = full_data, iter = 5000, start.vals = start.vals, prop_v
 max(m0cp$lpost)
 ```
 
-
+Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are called ```cp1_gibbs_left``` and ```cp1_gibbs_right```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. 
 
 # Acknowledgements 
 We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.
