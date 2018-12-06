@@ -151,26 +151,6 @@ The data shown above still contains the global bullet curvature. The changepoint
 check_min <- min(raw_data$value[!is.na(raw_data$value)])
 raw_data <- dplyr::mutate(raw_data, value_std = value - check_min)
 
-# define function to remove global structure
-robust_loess_fit <- function(cc, iter) {
-    n <- nrow(cc)
-    weights <- rep(1, n)
-    fit <- loess(value_std ~ x, data = cc, span = 1)
-    cc$fit <- predict(fit, newdata = cc)
-    cc$resid <- cc$value_std - cc$fit
-    i <- 1
-    while (i < iter) {
-      mar <- median(abs(cc$resid), na.rm = T)
-      cc$bisq <- pmax(1 - (cc$resid / (6 * mar))^2, 0)^2
-      weights <- ifelse(cc$resid > 0, cc$bisq, 1)
-      fit <- loess(value_std ~ x, data = cc, span = 1, weights = weights)
-      cc$fit <- predict(fit, newdata = cc)
-      cc$resid <- cc$value_std - cc$fit
-      i <- i + 1
-    }
-    return(fit)
-  }
-
 # remove global structure
 rlo_fit <- robust_loess_fit(cc = raw_data, iter = 20)
 raw_data$rlo_pred <- predict(rlo_fit, newdata = raw_data)
@@ -226,7 +206,7 @@ ggplot(data = full_data) +
 
 Now that we have imputed missing values, we can proceed to estimate the number and location of any grooves. In order to do this, we can can either call the function ```variable_cp_gibbs_v2()```, which, in turn, calls functions for running separate Gibbs sampling algorithms in the 0, 1, or 2 changepoint cases, or we can call each of these functions individually. To clearly demonstrate what is going on, we will call each of the necessary functions directly. The only things that we really care about are the estimated groove locations, as well as the maximum value of the log posterior density (which occurs at the estimated groove locations). The latter will enable us to choose the number and location of any possible grooves while the former actually provides the estimated groove locations in each model. 
 
-First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is called ```cp0_gibbs```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are actually Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function called ```lognormal_ou_pdf``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
+First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is called ```cp0_gibbs```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are always Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function called ```lognormal_ou_pdf``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
 
 ```{r cp0_gibbs, echo = TRUE, cache=FALSE}
 # log pdf of a normal distribution with the type of covariance matrix described in the model
@@ -252,3 +232,8 @@ m0cp <- cp0_gibbs(data = full_data, iter = 5000, start.vals = start.vals, prop_v
 ## print maximum value of the (conditional) log posterior up to the normalizing constant
 max(m0cp$lpost)
 ```
+
+
+
+# Acknowledgements 
+We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.
