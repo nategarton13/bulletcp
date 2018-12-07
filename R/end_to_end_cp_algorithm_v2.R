@@ -54,7 +54,7 @@
 #' @importFrom stats complete.cases
 #' @export
 
-detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 20, tol_cp = 1000, warmup = 200, verbose = FALSE,
+detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200, verbose = FALSE,
                          prior_numcp = rep(1/4, times = 4), est_impute_par = FALSE, impute_par = c(0.8,15))
 {
   ## put extra functions in here just in case
@@ -79,6 +79,21 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
   max_x_notNA <- max(d$x[!is.na(d$y)])
   min_x_notNA <- min(d$x[!is.na(d$y)])
   d <- d[d$x >= min_x_notNA & d$x <= max_x_notNA,]
+
+  ## Put missing values in if there are irregularly spaced gaps in x
+  x_na <- seq(from = min(d$x), to = max(d$x), by = min(d$x[2:nrow(d)] - d$x[1:(nrow(d) - 1)]))
+  x_na <- x_na[!round(x_na, digits = 2) %in% round(d$x, digits = 2)]
+  y_na <- rep(NA, times = length(x_na))
+  d_na <- data.frame("x" = x_na, "y" = y_na)
+  d <- rbind(d, d_na)
+  d <- d[order(d$x),]
+
+  ## put in check to make sure that the tol_edge argument is large enough
+  while(nrow(d[d$x > (max(d$x) - tol_edge),]) < 2 ||
+        nrow(d[d$x < (min(d$x) + tol_edge),]) < 2)
+  {
+    tol_edge <- tol_edge + 5
+  }
 
   ## impute data
   temp_d <- d[seq(from = 1, to = nrow(d),by = 20),]
@@ -192,6 +207,7 @@ get_grooves_bcp <- function(x, value, adjust = 10, ...)
 
   ## create data frame to be passed to detect_cp_v2
   data <- data.frame("x" = land$x, "y" = land$rlo_resid)
+  # data <- data.frame("x" = land$x, "y" = land$value)
 
   cp_results <- detect_cp_v2(data = data, ...)
 
