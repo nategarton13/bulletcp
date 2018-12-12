@@ -418,7 +418,7 @@ cp_gibbs$cp_map
 
 ```
 
-Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp_v2()```. Notice that the ```data``` argument here is set to be the 
+Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp_v2()```. Notice that the object passed to the ```data``` argument is the unscaled data that still has missing values but has the global structure removed. Here, we have also set ```est_impute_par = TRUE``` indicating that we would like to estimate the imputation parameters. If this argument is set to ```FALSE```, then the argument ```impute_par``` will need to be set with user supplied covariance parameters.
 
 ```{r detect_cp, echo = TRUE, cache = FALSE}
 
@@ -446,5 +446,21 @@ cp_gibbs2$changepoint_results$cp_map
 cp_gibbs2$grooves
 ```
 
+Finally, we can call a function that also removes global structure, and thus can take in the raw crosscut data. This function is called ```get_grooves_bcp```. The necessary arguments of this function follow a slightly different format than with the other functions so that it conforms to similar functions existing in the ```bulletxtrctr``` package. This function ultimately just removes the global structure and then calls ```detect_cp_v2()```. As such, the user can supply arguments to be passed to ```detect_cp_v2```, but it is intended that this not usually be necessary. The main reason why one may want to do this is to increase the number of iterations that each MCMC is run. The longer the MCMC is run, the more likely that the models can escape any local modes. For this reason, we demonstrate how a specific user supplied argument for the number of iterations can be fed to ```get_grooves_bcp```.
+
+```{r get_grooves_bcp, echo = TRUE, cache = FALSE}
+# Estimate the groove locations in the intended fashion using default argument values 
+cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10)
+
+# Estimated groove locations
+cp_gibbs3$groove
+
+# Estimate the groove locations by supplying additional arguments 
+cp_gibbs4 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 10000)
+
+# Estimated groove locations
+cp_gibbs4$groove
+
+```
 # Acknowledgements 
 We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.
