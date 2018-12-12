@@ -52,7 +52,7 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
 {
   ## If some function arguments (starting values/proposal variances are unspecified)
   ## choose generic arguments
-  if(is.na(start.vals))
+  if(any(is.na(start.vals)))
   {
     cp_sval_left <- min(data$x) + tol_edge + 10
     cp_sval_right <- max(data$x) - tol_edge - 10
@@ -61,14 +61,14 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
                                     "right" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_right), "beta" = c(1), "intercept" = c(0))),
                        "cp0" = list("sigma" = c(1), "l" = c(10)))
   }
-  if(is.na(prop_var))
+  if(any(is.na(prop_var)))
   {
     prop_var <- list("cp2" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2,1/2))),
                      "cp1" = list("left" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2))),
                                   "right" = list(diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2, 1/2)))),
                      "cp0" = diag(c(1/2,1/2)))
   }
-  if(is.na(cp_prop_var))
+  if(any(is.na(cp_prop_var)))
   {
     cp_prop_var <- list("cp2" = diag(c(10^2, 10^2)),
                         "cp1" = 10^2)
@@ -106,9 +106,9 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
   #
   # post_numcp <- c(p0,p1,p2)
 
-  avg_lp <- list("cp0" = mean(cp0_dsn$lp), "cp1" = 0.5 * mean(cp1_dsn$lp$left) + 0.5 * mean(cp1_dsn$lp$right), "cp2" = mean(cp2_dsn$lp))
-  avg_lp_left <- mean(cp1_dsn$lp$left)
-  avg_lp_right <- mean(cp1_dsn$lp$right)
+  # avg_lp <- list("cp0" = mean(cp0_dsn$lp), "cp1" = 0.5 * mean(cp1_dsn$lp$left) + 0.5 * mean(cp1_dsn$lp$right), "cp2" = mean(cp2_dsn$lp))
+  # avg_lp_left <- mean(cp1_dsn$lp$left)
+  # avg_lp_right <- mean(cp1_dsn$lp$right)
 
   max_lp <- list("cp0" = max(cp0_dsn$lp), "cp1_left" = max(cp1_dsn$lp$left), "cp1_right" = max(cp1_dsn$lp$right), "cp2" = max(cp2_dsn$lp))
 
@@ -117,7 +117,7 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
 
   return(list("posterior_cp" = cp_list,
               "cp_mean" = list("2cp" = apply(X = cp_list$cp2, MARGIN = 2, FUN = mean),
-                               "1cp" = list("left" = mean(cp_list$cp1$left), "right" = mean(cp_list$cp1$right))), "avg_lp" = avg_lp, "avg_lp_1cp" = c(avg_lp_left,avg_lp_right),
+                               "1cp" = list("left" = mean(cp_list$cp1$left), "right" = mean(cp_list$cp1$right))),
               "max_lp" = max_lp,
               "max_lpost" = max_lpost,
               "cp_map" = cp_map))

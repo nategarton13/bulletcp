@@ -370,21 +370,52 @@ ggplot(data = full_data) +
 This model has the highest maximum log posterior value, and thus will be chosen as the appropriate model for the data. Furthermore, the estimated changepoints appear to be very close to the true locations where the GEAs and the LEA meet.
 
 ### Running all MCMCs with one function
-Of course, everything done above can be done much more simply by using one of the three wrapper functions designed to make this entire process simple. There are wrapper functions which differ only in terms of the preprocessing steps that they perform and the number of objects which they return. All of the functions run all of the MCMCs and estimate groove locations. We will now show how each of these functions is designed to be used in practice. 
+Of course, everything done above can be done much more simply by using one of the three wrapper functions designed to make this entire process simple. There are wrapper functions which differ only in terms of the preprocessing steps that they perform and the number of objects which they return. All of the functions run all of the MCMCs and estimate groove locations. We will now show how each of these functions is designed to be used in practice. The only additional argument that is required by these functions is the prior on the number of grooves named ```prior_numcp```. This argument is a four element vector that must sum to 1. The elements of the prior vector are ordered as such (LEA only model, left GEA only model, right GEA only model, two GEA model). In practice it seems that the differences in the log posteriors (conditional on the model) are large enough that the model prior would need to be extraordinaraily strong to affect the final results.    
 
-First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2```.  It performs no data preprocessing. 
+First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2()```.  It performs no data preprocessing. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
 
 ```{r variable_cp_gibbs, echo = TRUE, cache=FALSE}
 
-# cp_gibbs <- variable_cp_gibbs_v2(data = full_data,
-#                                  start.vals = start.vals,
-#                                  prop_var = prop_var, 
-#                                  cp_prop_var = cp_prop_var, 
-#                                  verbose = FALSE, 
-#                                  tol_edge = tol_edge, 
-#                                  tol_cp = tol_cp, iter = iter, 
-#                                  warmup = warmup, 
-#                                  prior_numcp = prior_numcp)
+# changepoint starting values
+cp_sval_left <- min(full_data$x) + 50
+cp_sval_right <- max(full_data$x) - 50
+
+# list of starting values for each model
+start.vals <- list("cp2" = list("sigma" = c(1,1,1), "l" = c(10,10,10), "cp" = c(cp_sval_left,cp_sval_right), "beta" = c(-2,2), "intercept" = c(0,0)),
+                       "cp1" = list("left" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_left), "beta" = c(-1), "intercept" = c(0)),
+                                    "right" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_right), "beta" = c(1), "intercept" = c(0))),
+                       "cp0" = list("sigma" = c(1), "l" = c(10)))
+
+# proposal variances for each model
+prop_var <- list("cp2" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2,1/2))),
+                     "cp1" = list("left" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2))),
+                                  "right" = list(diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2, 1/2)))),
+                     "cp0" = diag(c(1/2,1/2)))
+
+# changepoint proposal variances 
+cp_prop_var <- list("cp2" = diag(c(10^2, 10^2)),
+                        "cp1" = 10^2)
+
+# prior on the number of changepoints 
+prior_numcp <- rep(1/4, times = 4)
+
+cp_gibbs <- variable_cp_gibbs_v2(data = full_data,
+                                 start.vals = start.vals,
+                                 prop_var = prop_var,
+                                 cp_prop_var = cp_prop_var,
+                                 verbose = FALSE,
+                                 tol_edge = 50,
+                                 tol_cp = 1000, 
+                                 iter = 5000,
+                                 warmup = 500,
+                                 prior_numcp = prior_numcp)
+
+# print the estimated maximum log posteriors
+cp_gibbs$max_lpost
+
+# Estimated groove locations in each model
+cp_gibbs$cp_map
+
 ```
 
 # Acknowledgements 
