@@ -370,7 +370,22 @@ ggplot(data = full_data) +
 This model has the highest maximum log posterior value, and thus will be chosen as the appropriate model for the data. Furthermore, the estimated changepoints appear to be very close to the true locations where the GEAs and the LEA meet.
 
 ### Running all MCMCs with one function
+Of course, everything done above can be done much more simply by using one of the three wrapper functions designed to make this entire process simple. There are wrapper functions which differ only in terms of the preprocessing steps that they perform and the number of objects which they return. All of the functions run all of the MCMCs and estimate groove locations. We will now show how each of these functions is designed to be used in practice. 
 
+First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2```.  It performs no data preprocessing. 
+
+```{r variable_cp_gibbs, echo = TRUE, cache=FALSE}
+
+# cp_gibbs <- variable_cp_gibbs_v2(data = full_data,
+#                                  start.vals = start.vals,
+#                                  prop_var = prop_var, 
+#                                  cp_prop_var = cp_prop_var, 
+#                                  verbose = FALSE, 
+#                                  tol_edge = tol_edge, 
+#                                  tol_cp = tol_cp, iter = iter, 
+#                                  warmup = warmup, 
+#                                  prior_numcp = prior_numcp)
+```
 
 # Acknowledgements 
 We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.
