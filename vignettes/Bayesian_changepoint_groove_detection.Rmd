@@ -372,7 +372,7 @@ This model has the highest maximum log posterior value, and thus will be chosen 
 ### Running all MCMCs with one function
 Of course, everything done above can be done much more simply by using one of the three wrapper functions designed to make this entire process simple. There are wrapper functions which differ only in terms of the preprocessing steps that they perform and the number of objects which they return. All of the functions run all of the MCMCs and estimate groove locations. We will now show how each of these functions is designed to be used in practice. The only additional argument that is required by these functions is the prior on the number of grooves named ```prior_numcp```. This argument is a four element vector that must sum to 1. The elements of the prior vector are ordered as such (LEA only model, left GEA only model, right GEA only model, two GEA model). In practice it seems that the differences in the log posteriors (conditional on the model) are large enough that the model prior would need to be extraordinaraily strong to affect the final results.    
 
-First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2()```.  It performs no data preprocessing. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
+First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2()```.  It requires that all data preprocessing bedone beforehand, and it only runs the MCMCs and estimates the groove locations. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
 
 ```{r variable_cp_gibbs, echo = TRUE, cache=FALSE}
 
@@ -416,6 +416,34 @@ cp_gibbs$max_lpost
 # Estimated groove locations in each model
 cp_gibbs$cp_map
 
+```
+
+Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp_v2()```. Notice that the ```data``` argument here is set to be the 
+
+```{r detect_cp, echo = TRUE, cache = FALSE}
+
+# Impute missing data, run MCMCs, and estimate MAPs
+cp_gibbs2 <- detect_cp_v2(data = data,
+                          start.vals = start.vals,
+                          prop_var = prop_var,
+                          cp_prop_var = cp_prop_var,
+                          verbose = FALSE,
+                          tol_edge = 50,
+                          tol_cp = 1000, 
+                          iter = 5000,
+                          warmup = 500,
+                          prior_numcp = prior_numcp,
+                          est_impute_par = TRUE)
+
+
+# print the estimated log posteriors
+cp_gibbs2$changepoint_results$max_lpost
+
+# Estimated groove locations in each model
+cp_gibbs2$changepoint_results$cp_map
+
+# The groove locations automatically chosen based on the MAP criteria
+cp_gibbs2$grooves
 ```
 
 # Acknowledgements 
