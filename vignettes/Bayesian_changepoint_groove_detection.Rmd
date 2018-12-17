@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 ```
 
 # Introduction 
-This package implements a Bayesian changepoint detection algorithm of the flavor found in "Bayesian Retrospective Multiple-Changepoint Identification" by D.A. Stephens in JRSS-c from 1994 (citation needed). This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
+This package implements a Bayesian changepoint detection algorithm of the flavor found in @stephens1994. This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = TRUE}
 library(ggplot2)
 sim_groove <- function(beta = c(-0.5,0.5), a = 300)
 {
@@ -83,7 +83,7 @@ In order to complete a Bayesian model specification, we need priors on each of t
 
 # Estimation
 
-As was noted in Stephens 1994 (citation needed), for any model including a changepoint, the likelihood is not a smooth function of the changepoint location. This is because, holding all other parameters fixed, shifting the changepoint value will result in zero change to the likelihood until it crosses the nearest point to the right or left, at which point the likelihood makes a jump. This makes maximum likelihood estimation in the standard way infeasible, but Bayesian estimation can be done in a fairly straightforward way via Gibbs sampling. The basic idea is that, for each model, we can construct a two step Gibbs sampler. In step 1 we sample from the posterior distribution of the mean and covariance parameters given the changepoint locations, and in step 2 we sample from the changepoint locations given the mean and covariance parameters. Because of the non-conjugacy in our model, we perform both sampling steps using a random walk Metropolis-Hastings (RWMH) step with Gaussian proposals. For details on Gibbs sampling and the Metropolis-Hastings algorithm, see BDA3 (citation needed). It is also worth mentioning that the zero changepoint model does not require Gibbs sampling at all, and we perform estimation there using a RWMH algorithm. 
+As was noted in @stephens1994, for any model including a changepoint, the likelihood is not a smooth function of the changepoint location. This is because, holding all other parameters fixed, shifting the changepoint value will result in zero change to the likelihood until it crosses the nearest point to the right or left, at which point the likelihood makes a jump. This makes maximum likelihood estimation in the standard way infeasible, but Bayesian estimation can be done in a fairly straightforward way via Gibbs sampling. The basic idea is that, for each model, we can construct a two step Gibbs sampler. In step 1 we sample from the posterior distribution of the mean and covariance parameters given the changepoint locations, and in step 2 we sample from the changepoint locations given the mean and covariance parameters. Because of the non-conjugacy in our model, we perform both sampling steps using a random walk Metropolis-Hastings (RWMH) step with Gaussian proposals. For details on Gibbs sampling and the Metropolis-Hastings algorithm [see @gelman2013]. It is also worth mentioning that the zero changepoint model does not require Gibbs sampling at all, and we perform estimation there using a RWMH algorithm. 
 
 As a practical note, it turns out that the posterior distribution is almost always multimodal, and it can happen that the sampler gets stuck in a suboptimal mode for a large number of iterations. It is also the case that the suboptimal modes need not even be close to the groove locations. It has, however, been our experience that the optimal mode corresponds well to the actual groove locations, which are often somewhat close to the edges of the data. With this in mind, starting values and the RWMH proposal variances play a very important role in the success of the sampling algorithm. Fortunately, it seems to be the case that by setting the initial changepoint values close to the edges of the data and making the proposal variance small (around 100 seems to work well) allows the sampler to wander inwards, and even with a modest number of iterations (say 5000), typically pass through the largest mode corresponding to the groove locations. This is not always the case, and it is possible that increasing the number of iterations produces better results.
 
@@ -126,11 +126,11 @@ Here, $Y$ is observed data and $Y^*$ is the missing data, and the covariance mat
 
 # Example 
 
-In this section, we will go through an example by individually using each necessary function as well as by using the wrapper function designed to perform all of the necessary steps with one function call. 
+In this section, we will go through an example by individually using each necessary function as well as by using the wrapper function designed to perform all of the necessary steps with one function call. Data from this example comes from the the James Hamby study [@hamby2009].
 
 First, we read in the data. These data are an example of an average of several 2D cross cuts from a 3D bullet land scan in the Hamby 44 data set. We can tell both from the plot and the ```head(raw_data)``` call that there are missing values in the data. 
 
-```{r raw_data, echo=TRUE, cache=FALSE, fig.cap="\\label{f:raw_data} A plot of an averaged cross cut from a 3D bullet land scan."}
+```{r raw_data, echo=TRUE, cache=FALSE, fig.cap="\\label{f:raw_data} A plot of an averaged cross cut from a 3D bullet land scan.", eval = TRUE}
 library(bulletcp)
 
 data("example_data")
@@ -143,9 +143,9 @@ ggplot(data = raw_data) +
 
 ## Removing global structure
 
-The data shown above still contains the global bullet curvature. The changepoint algorithm requires removal of this global structure before imputing the missing data. Functionality to do this is provided in the ```bulletxtrctr``` package *CITATION*. Code to remove this structure is shown below. 
+The data shown above still contains the global bullet curvature. The changepoint algorithm requires removal of this global structure before imputing the missing data. Functionality to do this is provided in the ```bulletxtrctr``` package [@bulletxtrctr]. Code to remove this structure is shown below. 
 
-```{r global_structure, echo=TRUE, cache=FALSE}
+```{r global_structure, echo=TRUE, cache=FALSE, eval = TRUE}
 
 # set the minimum y-value to zero
 check_min <- min(raw_data$value[!is.na(raw_data$value)])
@@ -168,7 +168,7 @@ ggplot(data = data) +
 ## Imputing missing values
 Now that the global structure has been removed from the land, we can proceed to impute missing values. We will work with scaled y-values, and so the first step is to perform this scaling. 
 
-```{r scale_yvals, echo=TRUE}
+```{r scale_yvals, echo=TRUE, eval = TRUE}
 # make range of x data equal to the range of non NA points and scale the y-values
 d <- data.frame("x" = data$x, "y" = scale(data$y))
 max_x_notNA <- max(d$x[!is.na(d$y)])
@@ -177,7 +177,7 @@ d <- d[d$x >= min_x_notNA & d$x <= max_x_notNA,]
 ```
 
 Once the data have been scaled, we take a subset of them by selecting every 20-th point to use when estimating the Gaussian process parameters. Then, we estimate these parameters using the ```mlgp()``` function in this package. The optimization routine is done on the log scale so as to remove boundary constraints for the Gaussian process parameters, which are both constrained to be positive. The first parameter value returned is the log of the process standard deviation, and the second returned parameters value is the log of the length scale. The default values used if one does not choose to estimate the Gaussian process parameters are $0.8$ and $15$ for the standard deviation and length scale, respecively.
-```{r estimate_gp_par, echo = TRUE, cache=FALSE}
+```{r estimate_gp_par, echo = TRUE, cache=FALSE, eval = TRUE}
 # subset data
 temp_d <- d[seq(from = 1, to = nrow(d),by = 20),]
 
@@ -193,7 +193,7 @@ impute_par
 ```
 
 Now that we have parameter estimates, we can use the function ```myimpute()``` to impute missing values. 
-```{r impute_values, echo = TRUE, cache = FALSE}
+```{r impute_values, echo = TRUE, cache = FALSE, eval = TRUE}
 full_data <- myimpute(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
 head(full_data)
 
@@ -210,7 +210,7 @@ Now that we have imputed missing values, we can proceed to estimate the number a
 
 First, we will run a Gibbs sampler estimating model parameters in the case that there are zero changepoints. In this case, there should be no GEAs in the data. This is clearly not true in our example, but in some cases it will be. The function which runs the MCMC sampler in this case is named ```cp0_gibbs()```. It may be worth noting that, although the function name would seem to imply that the algorithm is a Gibbs sampler, in the case of zero changepoints, it is actually just a RWMH algorithm. The function was named for the sake of consistency accross sampling functions, which are always Gibbs samplers except in this special case. Argument descriptions for this function can be found in the relevant function documentation. In the beginning of the following code chunk, a function named ```lognormal_ou_pdf()``` is defined. This function defined the log of the pdf of a normal distribution with the covariance structure in the models described above. This function is necessary as it avoids matrix operations, taking advantage of the particular covariance structure we have defined. It is not critical to understand this function beyond the fact that it is needed in every MCMC sampler we employ. 
 
-```{r cp0_gibbs, echo = TRUE, cache=FALSE}
+```{r cp0_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 # log pdf of a normal distribution with the type of covariance matrix described in the model
 lognormal_ou_pdf <- function(x, mu, sigma, l)
   {
@@ -239,7 +239,7 @@ max(m0cp$lpost)
 
 Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are named ```cp1_gibbs_left()``` and ```cp1_gibbs_right()```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments mostly correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. However, we must also specify the ```tol_edge``` argument which forces the potential changepoint to be a minimum distance from the edge of the data. 
 
-```{r cp1_gibbs_complicated, echo = TRUE, cache=FALSE}
+```{r cp1_gibbs_complicated, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # define starting values for the changepoints
 cp_start_left <- min(full_data$x) + 30
@@ -301,7 +301,7 @@ In the plot above, the vertical black lines correspond to the MAP estimates of t
 
 Note that the function ```changepoint_gibbs_1cp_v2()``` is just a wrapper for the ```changepoint_gibbs_1cp_left()``` and ```changepoint_gibbs_1cp_right()``` functions above. To use this function, starting values and proposal variances for each model are input separately. As shown below, the MAP estimates for the changepoints are very close to the estimates found from running each analysis individually as above. They will never be identical without setting a seed, as the MCMC algorithm is inherently random.
 
-```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE}
+```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # run both Gibbs MCMC algorithms for each of the single changepoint model
 m1cp <- cp1_gibbs_v2(data = full_data, iter = 5000, 
@@ -325,7 +325,7 @@ map_cp1_right2
 ### Model with two GEAs
 Because assuming a model structure with a single GEA involves fitting two models, fitting a model taht assumes there are two GEAs is actually a bit simpler. Though it requires proposal variances and starting values for both GEAs as well as the LEA, it requires only performing one MCMC. The function that performs this sampling is named ```changepoint_gibbs_2cp_v2()```, and its use is shown in the code block below. The one additional argument specific to this function is the named ```tol_cp```. This is similar to the ```tol_edge``` argument except it specifies how close the changepoints can be to each other, not to the edge of the data. The default value for this argument is 1000, as this range is well below the range of the data. 
 
-```{r cp2_gibbs, echo = TRUE, cache=FALSE}
+```{r cp2_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 # define starting values
 start.vals <- list("sigma" = c(1,1,1), 
                    "l" = c(10,10,10), 
@@ -375,7 +375,7 @@ Of course, everything done above can be done much more simply by using one of th
 
 First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2()```.  It requires that all data preprocessing bedone beforehand, and it only runs the MCMCs and estimates the groove locations. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
 
-```{r variable_cp_gibbs, echo = TRUE, cache=FALSE}
+```{r variable_cp_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # changepoint starting values
 cp_sval_left <- min(full_data$x) + 50
@@ -421,7 +421,7 @@ cp_gibbs$cp_map
 
 Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp_v2()```. Notice that the object passed to the ```data``` argument is the unscaled data that still has missing values but has the global structure removed. Here, we have also set ```est_impute_par = TRUE``` indicating that we would like to estimate the imputation parameters. If this argument is set to ```FALSE```, then the argument ```impute_par``` will need to be set with user supplied covariance parameters.
 
-```{r detect_cp, echo = TRUE, cache = FALSE}
+```{r detect_cp, echo = TRUE, cache = FALSE, eval = TRUE}
 
 # Impute missing data, run MCMCs, and estimate MAPs
 cp_gibbs2 <- detect_cp_v2(data = data,
@@ -449,7 +449,7 @@ cp_gibbs2$grooves
 
 Finally, we can call a function that also removes global structure, and thus can take in the raw crosscut data. This function is called ```get_grooves_bcp```. The necessary arguments of this function follow a slightly different format than with the other functions so that it conforms to similar functions existing in the ```bulletxtrctr``` package. This function ultimately just removes the global structure and then calls ```detect_cp_v2()```. As such, the user can supply arguments to be passed to ```detect_cp_v2```, but it is intended that this not usually be necessary. The main reason why one may want to do this is to increase the number of iterations that each MCMC is run. The longer the MCMC is run, the more likely that the models can escape any local modes. For this reason, we demonstrate how a specific user supplied argument for the number of iterations can be fed to ```get_grooves_bcp```.
 
-```{r get_grooves_bcp, echo = TRUE, cache = FALSE}
+```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
 # Estimate the groove locations in the intended fashion using default argument values 
 cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10)
 
