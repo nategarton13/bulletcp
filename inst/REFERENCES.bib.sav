@@ -40,4 +40,12 @@
   pages   = {99-110},
 }
 
+@Manual{bulletxtrctr,
+  title  = {bulletxtrctr: Automatic Matching of Bullet Striae},
+  author = {Heike Hofmann and Susan Vanderplas and Ganesh Krishnan},
+  year   = {2018},
+  note   = {R package version 0.2.0},
+  url    = {https://heike.github.io/bulletxtrctr/},
+}
+
 @Comment{jabref-meta: databaseType:bibtex;}

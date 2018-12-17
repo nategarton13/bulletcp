@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: REFERENCES.bib
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -464,3 +465,5 @@ cp_gibbs4$groove
 ```
 # Acknowledgements 
 We would like to thank the efforts of CSAFE and the Roy J Carver High Resolution Microscopy lab in scanning the Hamby 44 set and providing the scans to us.
+
+# References
