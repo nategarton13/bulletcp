@@ -52,6 +52,7 @@
 #' data that was actually used for the changepoint algorithm (since it doesn't impute values
 #' past the outermost non-missing values), and the estimated groove locations.
 #' @importFrom stats complete.cases
+#' @importFrom Rdpack reprompt
 #' @export
 
 detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200, verbose = FALSE,
