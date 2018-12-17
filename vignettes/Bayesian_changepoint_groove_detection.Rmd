@@ -2,7 +2,7 @@
 title: "Groove detection with a Bayesian changepoint model"
 author: "Nate Garton"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_document
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -39,11 +39,11 @@ ggplot(data = d) +
 
 ```
 
-The idea behind the changepoint approach is that within either the left GEA, right GEA, or the LEA, the global structure is consistent and can either be described by a line with zero slope, a line with positive slope for the right GEA, or a line with negative slope for the left GEA. The best fitting statistical model, in terms of the magnitude of the likelihood, should then be the one which assumes that the points at which the global structure changes align with where the GEAs and LEA meet. Thus, our model will be defined in a piecewise fashion. In practice there are also complex additional patterns which may result from a number of reasons, but this large scale structural assumption remains generally reasonable. The complex smaller scale patterns can be thought of as the dependence in the data after accounting for the global structure. Because of the nature of the model which we consider, it becomes necessary for computational reasons to perform a couple of data preprocessing steps. Specifically, we will scale the residuals from the robust LOESS procedure, and we will impute missing values. In the next section, we describe the model that we will use to identify changepoints, after which we will describe the estimation procedure which we use. Following that, we will describe the two main data preprocessing steps necessary for estimation to be computationally feasible.
+The idea behind the changepoint approach is that within either the left GEA, right GEA, or the LEA, the global structure is consistent and can either be described by a line with zero slope, a line with positive slope for the right GEA, or a line with negative slope for the left GEA. Finding the points where the GEAs and LEA meet is treated as a problem of model selection. That is, the best fitting statistical model, in terms of the magnitude of the likelihood, should be the one which assumes that the points at which the global structure changes align with where the GEAs and LEA meet. These points of global structural change are what we will call changepoints. Thus, our model will be defined in a piecewise fashion. In practice there are also complex additional patterns which may exist for a number of reasons, but this large scale structural assumption remains generally reasonable. The complex smaller scale patterns can be thought of as the dependence in the data after accounting for the global structure. Because of the nature of the model which we consider, it becomes necessary for computational reasons to perform a couple of data preprocessing steps. Specifically, we will scale the residuals from the robust LOESS procedure, and we will impute missing values. In the next section, we describe the model that we will use to identify changepoints, after which we will describe the estimation procedure which we use. Following that, we will describe the two main data preprocessing steps necessary for estimation to be computationally feasible.
 
 # Model
 
-Before introducing the model, we introduce some notation. First, let $\{Y(x_i): i = 1,2, ..., n\}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. For simplicity, also assume that $x_1 < x_2 < ... < x_n$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. As mentioned in the previous paragraph, the complex small scale patterns, such as the stria, will be modeled through a covariance structure on the data that will be allowed to differ between each GEA and between the GEAs and LEA. We will construct the covariance matrices from the exponential covariance function $K(t, t';\sigma, \ell) = \sigma^2 e^{-\frac{|t - t'|}{\ell}}$. The differences in covariance matrices for the GEAs and LEA will be reflected in the parameters $\sigma$ and $\ell$. The data model that we consider is then, 
+Before introducing the model, we introduce some notation. First, let $\{Y(x_i): i = 1,2, ..., n\}$ denote the set of random variables representing the residuals from the robust LOESS procedure at the values $x_i$. For simplicity, also assume that $x_1 < x_2 < ... < x_n$. Also, let $c_l$ be the value of the left changepoint and $c_r$ be the value of the right changepoint. Here, the left changepoint is where the left GEA meets the LEA, and the right changepoint is where the right GEA meets the LEA. Also, denote the median centered $x$ values as $x'_i = x_i - \tilde{x}$ where $\tilde{x}$ is the median $x$ value. As mentioned in the previous paragraph, the complex small scale patterns, such as the striae, will be modeled through a covariance structure on the data that will be allowed to differ between each GEA and between the GEAs and LEA. We will construct the covariance matrices from the exponential covariance function $K(t, t';\sigma, \ell) = \sigma^2 e^{-\frac{|t - t'|}{\ell}} = cov(Y(t), Y(t'))$. The differences in covariance matrices for the GEAs and LEA will be reflected in the parameters $\sigma$ and $\ell$. The data model that we consider is then, 
 
 \begin{align}
 (Y(x_1), Y(x_2), ..., Y(x_{k_1})) &\sim N(\beta_{01}\mathbb{1} + \beta_{11} x'_{1:k_1}, \Sigma_1(\sigma_1, \ell_1)) \\
@@ -77,13 +77,13 @@ Finally, conditional on there being no GEAs in the data, the model is simply
 
 Thus, estimating the changepoint locations also involves selecting the most appropriate model. In order to avoid confusion, we have slightly abused notation and, for example, $\Sigma_1(\sigma_1, \ell_1)$ as it is estimated in the two changepoint model is *not* the same as $\Sigma_1(\sigma_1, \ell_1)$ from either of the one changepoint models, and $\Sigma_1(\sigma_1, \ell_1)$ is also *not* the same between the two one changepoint models. As another example, $\beta_0$ is *not* the same between each of the one changepoint models. So, to be clear, duplication of notation in *different* models is not meant to imply that those parameters are shared between models.
 
-For clarity, ultimately, these above four models are each individually fitted, and each model above is given a prior. From there, we do model selection in the formal Bayesian way, selecting the most probable model. At this point, we select a suitable estimator for the changepoint locations (we will use the maximum a posterior estimate). 
+Ultimately, these above four models are each individually fitted, and each model above is given a prior. From there, we do model selection in the formal Bayesian way, selecting the most probable model. Simultaneously with selecting the most probable model, we also use the maximum a posteriori estimator for the changepoint locations. 
 
 In order to complete a Bayesian model specification, we need priors on each of the parameters in each model as well as each model. We will assume independence between each parameter a priori. For each length scale $\ell$, we will assume $\ell \sim \text{Gamma}(3,5)$. For each standard deviation, we will assume $\sigma \sim \text{Half-Normal}^{+}(0,1)$, where $\text{Half-Normal}^{+}(\cdot,\cdot)$ is notation for the normal distribution restricted to the positive real numbers. For intercept parameters, $\beta_{01}, \beta_{02}, \beta_0 \sim N(0, 10)$. For the slope parameters, the preceding trend deviates slightly. For any slope that corresponds to the *left* GEA, $\beta_1$ or $\beta_{01}$, we will assume that the slope can not be positive. That is, $\beta_1, \beta_{01} \sim \text{Half-Normal}^{-}(0,10)$, where $\text{Half-Normal}^{-}(\cdot, \cdot)$ is notation for the normal distribution restricted to the negative real numbers. Contrastingly, for any slope that corresponds to the *right* GEA, $\beta_1$ or $\beta_{02}$, we will assume that the slope can not be negative. That is, $\beta_1, \beta_{01} \sim \text{Half-Normal}^{+}(0,10)$. For the changepoint locations, we assume a uniform prior $\pi(c_l, c_r) \propto I(a < c_l < c_r - \gamma < b - \gamma)$. Here, $a$ and $b$ are some values close to the edges of the data. How close those values are to the edges is a parameter that is set manually. Further, we include another hyperparameter, $\gamma$, which can be set so that the changepoints are not allowed to be too close to each other. This is also a parameter that is set manually. Lastly, we assume a uniform prior over all four models.
 
 # Estimation
 
-As was noted in @stephens1994, for any model including a changepoint, the likelihood is not a smooth function of the changepoint location. This is because, holding all other parameters fixed, shifting the changepoint value will result in zero change to the likelihood until it crosses the nearest point to the right or left, at which point the likelihood makes a jump. This makes maximum likelihood estimation in the standard way infeasible, but Bayesian estimation can be done in a fairly straightforward way via Gibbs sampling. The basic idea is that, for each model, we can construct a two step Gibbs sampler. In step 1 we sample from the posterior distribution of the mean and covariance parameters given the changepoint locations, and in step 2 we sample from the changepoint locations given the mean and covariance parameters. Because of the non-conjugacy in our model, we perform both sampling steps using a random walk Metropolis-Hastings (RWMH) step with Gaussian proposals. For details on Gibbs sampling and the Metropolis-Hastings algorithm [see @gelman2013]. It is also worth mentioning that the zero changepoint model does not require Gibbs sampling at all, and we perform estimation there using a RWMH algorithm. 
+As was noted in @stephens1994, for any model including a changepoint, the likelihood is not a smooth function of the changepoint location. This is because, holding all other parameters fixed, shifting the changepoint value will result in zero change to the likelihood until it crosses the nearest point to the right or left, at which point the likelihood makes a jump. This makes maximum likelihood estimation in the standard way infeasible, but Bayesian estimation can be done in a fairly straightforward way via Gibbs sampling. The basic idea is that, for each model, we can construct a two step Gibbs sampler. In step 1 we sample from the posterior distribution of the mean and covariance parameters given the changepoint locations, and in step 2 we sample from the changepoint locations given the mean and covariance parameters. Because of the non-conjugacy in our model, we perform both sampling steps using a random walk Metropolis-Hastings (RWMH) step with Gaussian proposals. For details on Gibbs sampling and the Metropolis-Hastings algorithm see @gelman2013. It is also worth mentioning that the zero changepoint model does not require Gibbs sampling at all, and we perform estimation there using a RWMH algorithm. 
 
 As a practical note, it turns out that the posterior distribution is almost always multimodal, and it can happen that the sampler gets stuck in a suboptimal mode for a large number of iterations. It is also the case that the suboptimal modes need not even be close to the groove locations. It has, however, been our experience that the optimal mode corresponds well to the actual groove locations, which are often somewhat close to the edges of the data. With this in mind, starting values and the RWMH proposal variances play a very important role in the success of the sampling algorithm. Fortunately, it seems to be the case that by setting the initial changepoint values close to the edges of the data and making the proposal variance small (around 100 seems to work well) allows the sampler to wander inwards, and even with a modest number of iterations (say 5000), typically pass through the largest mode corresponding to the groove locations. This is not always the case, and it is possible that increasing the number of iterations produces better results.
 
@@ -382,15 +382,33 @@ cp_sval_left <- min(full_data$x) + 50
 cp_sval_right <- max(full_data$x) - 50
 
 # list of starting values for each model
-start.vals <- list("cp2" = list("sigma" = c(1,1,1), "l" = c(10,10,10), "cp" = c(cp_sval_left,cp_sval_right), "beta" = c(-2,2), "intercept" = c(0,0)),
-                       "cp1" = list("left" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_left), "beta" = c(-1), "intercept" = c(0)),
-                                    "right" = list("sigma" = c(1,1), "l" = c(10,10), "cp" = c(cp_sval_right), "beta" = c(1), "intercept" = c(0))),
+start.vals <- list("cp2" = list("sigma" = c(1,1,1), 
+                                "l" = c(10,10,10), 
+                                "cp" = c(cp_sval_left,cp_sval_right), 
+                                "beta" = c(-2,2), 
+                                "intercept" = c(0,0)),
+                       "cp1" = list("left" = list(
+                                        "sigma" = c(1,1), 
+                                        "l" = c(10,10), 
+                                        "cp" = c(cp_sval_left), 
+                                        "beta" = c(-1), 
+                                        "intercept" = c(0)),
+                                    "right" = list(
+                                        "sigma" = c(1,1), 
+                                        "l" = c(10,10), 
+                                        "cp" = c(cp_sval_right), 
+                                        "beta" = c(1), 
+                                        "intercept" = c(0))),
                        "cp0" = list("sigma" = c(1), "l" = c(10)))
 
 # proposal variances for each model
-prop_var <- list("cp2" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2,1/2))),
-                     "cp1" = list("left" = list(diag(c(1/2,1/2,1/2,1/2)), diag(c(1/2,1/2))),
-                                  "right" = list(diag(c(1/2,1/2)), diag(c(1/2,1/2,1/2, 1/2)))),
+prop_var <- list("cp2" = list(diag(c(1/2,1/2,1/2,1/2)), 
+                              diag(c(1/2,1/2)), 
+                              diag(c(1/2,1/2,1/2,1/2))),
+                     "cp1" = list("left" = list(diag(c(1/2,1/2,1/2,1/2)), 
+                                                diag(c(1/2,1/2))),
+                                  "right" = list(diag(c(1/2,1/2)), 
+                                                 diag(c(1/2,1/2,1/2, 1/2)))),
                      "cp0" = diag(c(1/2,1/2)))
 
 # changepoint proposal variances 
