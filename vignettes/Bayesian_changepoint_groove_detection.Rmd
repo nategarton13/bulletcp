@@ -21,21 +21,24 @@ This package implements a Bayesian changepoint detection algorithm of the flavor
 
 ```{r, echo = FALSE, eval = TRUE}
 library(ggplot2)
-sim_groove <- function(beta = c(-0.5,0.5), a = 300)
+sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 {
-  x <- seq(from = 0, to = 2300, by = 1)
+  x <- seq(from = 0, to = 2158, by = 1)
   med <- median(x)
   y <- 1*(x <= a)*(beta[1]*(x - med) - beta[1]*(a - med)) + 
-    1*(x >= 2300 - a)*(beta[2]*(x - med) - beta[2]*(2300 - a - med))
+    1*(x >= 2158 - a)*(beta[2]*(x - med) - beta[2]*(2158 - a - med))
   return(data.frame("x" = x, "y" = y))
 }
 
 d <- sim_groove()
 ggplot(data = d) +
-  geom_point(aes(x = x, y = y)) +
-  geom_text(mapping = aes(x = 300, y = 100, label = "GEA")) + 
-  geom_text(mapping = aes(x = 2000, y = 100, label = "GEA")) +
-  geom_text(mapping = aes(x = 2300/2, y = 25, label = "LEA"))
+  geom_line(aes(x = x, y = y), size = 2) +
+  geom_text(mapping = aes(x = 300, y = 20, label = "GEA")) + 
+  geom_text(mapping = aes(x = 1800, y = 20, label = "GEA")) +
+  geom_text(mapping = aes(x = 2158/2, y = 5, label = "LEA")) +
+  theme_bw() +
+  ylab("Height") +
+  xlab("Width")
 
 ```
 
@@ -138,7 +141,9 @@ head(raw_data)
 
 ggplot(data = raw_data) +
   geom_point(aes(x = x, y = value)) +
-  theme_bw()
+  theme_bw() +
+  ylab("Height") +
+  xlab("Width")
 ```
 
 ## Removing global structure
@@ -162,7 +167,9 @@ data <- data.frame("x" = raw_data$x, "y" = raw_data$rlo_resid)
 # plot the new data
 ggplot(data = data) +
   geom_point(aes(x = x, y = y)) +
-  theme_bw()
+  theme_bw() +
+  ylab("Height") +
+  xlab("Width")
 ```
 
 ## Imputing missing values
