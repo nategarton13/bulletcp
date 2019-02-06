@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 # Introduction 
-This package implements a Bayesian changepoint detection algorithm of the flavor found in @stephens1994. This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
+This package implements a Bayesian changepoint detection algorithm of the flavor found in @stephens1994. This approach assumes that given an average of several 2D crosscuts from a 3D bullet land scan which has had the global structure removed via the robust LOESS procedure @cleveland1979, the land engraved area (LEA) is fairly flat, and the groove engraved area (GEA) possesses an approximately linear structure with a nonzero slope. An example of this basic structure is given below.
 
 ```{r, echo = FALSE, eval = TRUE}
 library(ggplot2)
