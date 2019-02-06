@@ -2,7 +2,7 @@
 title: "Groove detection with a Bayesian changepoint model"
 author: "Nate Garton"
 date: "`r Sys.Date()`"
-output: rmarkdown::pdf_document
+output: rmarkdown::html_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
