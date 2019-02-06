@@ -311,7 +311,7 @@ Note that the function ```runmcmc_cp1()``` is just a wrapper for the ```runmcmc_
 ```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # run both Gibbs MCMC algorithms for each of the single changepoint model
-m1cp <- cp1_gibbs_v2(data = full_data, iter = 5000, 
+m1cp <- runmcmc_cp1(data = full_data, iter = 5000, 
                      start.vals.left = start.vals$left, 
                      start.vals.right = start.vals$right,
                      prop_var_left = prop_var$left, 
