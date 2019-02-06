@@ -48,7 +48,7 @@
 
 
 ## function to get the conditional posterior given 0,1,2 changepoints
-variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
+runmcmc_cpall <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE, prior_numcp = rep(1/4, times = 4))
 {
   ## If some function arguments (starting values/proposal variances are unspecified)
   ## choose generic arguments
@@ -78,13 +78,13 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
   cp_list <- list()
 
   ## two changepoint model
-  cp2_dsn <- cp2_gibbs_v2(data = data, iter = iter, start.vals = start.vals$cp2, prop_var = prop_var$cp2, cp_prop_var = cp_prop_var$cp2, tol_edge = tol_edge, tol_cp = tol_cp, warmup = warmup, verbose = verbose)
+  cp2_dsn <- runmcmc_cp2(data = data, iter = iter, start.vals = start.vals$cp2, prop_var = prop_var$cp2, cp_prop_var = cp_prop_var$cp2, tol_edge = tol_edge, tol_cp = tol_cp, warmup = warmup, verbose = verbose)
   cp_list$cp2 <- cp2_dsn$parameters$cp
   mcp2 <- mean(exp(cp2_dsn$lp))
   map_cp2 <- cp2_dsn$parameters$cp[which.max(cp2_dsn$lpost),]
 
   ## one changepoint model
-  cp1_dsn <- cp1_gibbs_v2(data = data, iter = iter, start.vals.left = start.vals$cp1$left, start.vals.right = start.vals$cp1$right,
+  cp1_dsn <- runmcmc_cp1(data = data, iter = iter, start.vals.left = start.vals$cp1$left, start.vals.right = start.vals$cp1$right,
                           prop_var_left = prop_var$cp1$left, prop_var_right = prop_var$cp1$right, cp_prop_var = cp_prop_var$cp1, tol_edge = tol_edge, warmup = warmup, verbose = verbose)
   ##cp_list$cp1 <- list("ppleft" = cp1_dsn$ppleft, "ppright" = cp1_dsn$ppright, "left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
   cp_list$cp1 <- list("left" = cp1_dsn$left_parameters$cp, "right" = cp1_dsn$right_parameters$cp)
@@ -93,7 +93,7 @@ variable_cp_gibbs_v2 <- function(data, iter = 8000, start.vals = NA, prop_var = 
   map_cp1_right <- as.numeric(cp1_dsn$right_parameters$cp)[which.max(cp1_dsn$lpost$right)]
 
   ## zero changepoint model
-  cp0_dsn <- cp0_gibbs(data = data, iter = iter, start.vals = start.vals$cp0, prop_var = prop_var$cp0, warmup = warmup, verbose = verbose)
+  cp0_dsn <- runmcmc_cp0(data = data, iter = iter, start.vals = start.vals$cp0, prop_var = prop_var$cp0, warmup = warmup, verbose = verbose)
   mcp0 <- mean(cp0_dsn$lp)
 
   ## posterior cp probabilities

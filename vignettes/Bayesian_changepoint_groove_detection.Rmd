@@ -201,7 +201,7 @@ impute_par
 
 Now that we have parameter estimates, we can use the function ```myimpute()``` to impute missing values. 
 ```{r impute_values, echo = TRUE, cache = FALSE, eval = TRUE}
-full_data <- myimpute(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
+full_data <- imputeGP(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
 head(full_data)
 
 ggplot(data = full_data) +
@@ -236,7 +236,7 @@ start.vals <- list("sigma" = c(1), "l" = c(10))
 prop_var <- diag(c(1/2,1/2))
 
 # run the RWMH sampler for the zero changepoint model
-m0cp <- cp0_gibbs(data = full_data, iter = 5000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
+m0cp <- runmcmc_cp0(data = full_data, iter = 5000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
 
 # print maximum value of the (conditional) log posterior up to the normalizing constant
 max(m0cp$lpost)
@@ -244,7 +244,7 @@ max(m0cp$lpost)
 
 ### Model with one GEA
 
-Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are named ```cp1_gibbs_left()``` and ```cp1_gibbs_right()```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments mostly correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. However, we must also specify the ```tol_edge``` argument which forces the potential changepoint to be a minimum distance from the edge of the data. 
+Now we proceed to the slightly more involved cases where the model assumes that there are one or more changepoints in the data. If we assume that there is one changepoint, we must model the case when the GEA is on the left side of the land as well as on the right side of the land. The functions that we will use to do this are named ```runmcmc_cp1_left()``` and ```runmcmc_cp1_right()```, corresponding to the models with the location of the the GEA assumed to be on thel left and right side of the land, respectively. We must specify more arguments to these functions than we did in the previous case. These arguments mostly correspond to parameters for the proposal variances for sampling the parameters on both the GEA and the LEA, as well as starting values for each of these sets of parameters. However, we must also specify the ```tol_edge``` argument which forces the potential changepoint to be a minimum distance from the edge of the data. 
 
 ```{r cp1_gibbs_complicated, echo = TRUE, cache=FALSE, eval = TRUE}
 
@@ -274,14 +274,14 @@ prop_var <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)),
 cp_prop_var <- 10^2
 
 # run Gibbs MCMC for the left GEA model 
-m1cp_left <- cp1_gibbs_left(data = full_data, iter = 5000, warmup = 500, 
+m1cp_left <- runmcmc_cp1_left(data = full_data, iter = 5000, warmup = 500, 
                             start.vals = start.vals$left, 
                             prop_var = prop_var$left, 
                             cp_prop_var = cp_prop_var, 
                             verbose = FALSE, tol_edge = 20)
 
 # run Gibbs MCMC for the right GEA model
-m1cp_right <- cp1_gibbs_right(data = full_data, iter = 5000, warmup = 500, 
+m1cp_right <- runmcmc_cp1_right(data = full_data, iter = 5000, warmup = 500, 
                               start.vals = start.vals$right, 
                               prop_var = prop_var$right, 
                               cp_prop_var = cp_prop_var, 
@@ -306,7 +306,7 @@ ggplot(data = full_data) +
 
 In the plot above, the vertical black lines correspond to the MAP estimates of the changepoint locations for each model. Also, it is clear that the left changepoint model is a better fit to the data given the fact that the maximum log posterior value (up to a constant) is larger than it is for the right changepoint model. However, both of these models appear more likely than the zero changepoint model, which has a much lower maximum log posterior value. 
 
-Note that the function ```changepoint_gibbs_1cp_v2()``` is just a wrapper for the ```changepoint_gibbs_1cp_left()``` and ```changepoint_gibbs_1cp_right()``` functions above. To use this function, starting values and proposal variances for each model are input separately. As shown below, the MAP estimates for the changepoints are very close to the estimates found from running each analysis individually as above. They will never be identical without setting a seed, as the MCMC algorithm is inherently random.
+Note that the function ```runmcmc_cp1()``` is just a wrapper for the ```runmcmc_cp1_left()``` and ```runmcmc_cp1_right()``` functions above. To use this function, starting values and proposal variances for each model are input separately. As shown below, the MAP estimates for the changepoints are very close to the estimates found from running each analysis individually as above. They will never be identical without setting a seed, as the MCMC algorithm is inherently random.
 
 ```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE, eval = TRUE}
 
@@ -349,7 +349,7 @@ prop_var <- list(diag(c(1/2,1/2,1/2,1/2)),
 cp_prop_var <- diag(c(10^2, 10^2))
 
 # run Gibbs MCMC
-m2cp <- cp2_gibbs_v2(data = full_data, 
+m2cp <- runmcmc_cp2(data = full_data, 
                      iter = 5000, 
                      start.vals = start.vals, 
                      prop_var = prop_var, 
@@ -380,7 +380,7 @@ This model has the highest maximum log posterior value, and thus will be chosen 
 ### Running all MCMCs with one function
 Of course, everything done above can be done much more simply by using one of the three wrapper functions designed to make this entire process simple. There are wrapper functions which differ only in terms of the preprocessing steps that they perform and the number of objects which they return. All of the functions run all of the MCMCs and estimate groove locations. We will now show how each of these functions is designed to be used in practice. The only additional argument that is required by these functions is the prior on the number of grooves named ```prior_numcp```. This argument is a four element vector that must sum to 1. The elements of the prior vector are ordered as such (LEA only model, left GEA only model, right GEA only model, two GEA model). In practice it seems that the differences in the log posteriors (conditional on the model) are large enough that the model prior would need to be extraordinaraily strong to affect the final results.    
 
-First, we will start with the function which does the least data preprocessing. This function is named ```variable_cp_gibbs_v2()```.  It requires that all data preprocessing bedone beforehand, and it only runs the MCMCs and estimates the groove locations. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
+First, we will start with the function which does the least data preprocessing. This function is named ```runmcmc_cpall()```.  It requires that all data preprocessing bedone beforehand, and it only runs the MCMCs and estimates the groove locations. We also need to specify lists of starting values and proposal variances. Each list element corresponds to a given model, so specification of starting values and proposal variances is a little cumbersome, but default starting values seem to work reasonably well on cases that have been tested so far. The list elements need to be named as they are in the example code below. 
 
 ```{r variable_cp_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 
@@ -425,7 +425,7 @@ cp_prop_var <- list("cp2" = diag(c(10^2, 10^2)),
 # prior on the number of changepoints 
 prior_numcp <- rep(1/4, times = 4)
 
-cp_gibbs <- variable_cp_gibbs_v2(data = full_data,
+cp_gibbs <- runmcmc_cpall(data = full_data,
                                  start.vals = start.vals,
                                  prop_var = prop_var,
                                  cp_prop_var = cp_prop_var,
@@ -444,12 +444,12 @@ cp_gibbs$cp_map
 
 ```
 
-Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp_v2()```. Notice that the object passed to the ```data``` argument is the unscaled data that still has missing values but has the global structure removed. Here, we have also set ```est_impute_par = TRUE``` indicating that we would like to estimate the imputation parameters. If this argument is set to ```FALSE```, then the argument ```impute_par``` will need to be set with user supplied covariance parameters.
+Now we introduce the usage of a function which, once global structure has been removed, will scale the data and impute missing values. The function is named ```detect_cp()```. Notice that the object passed to the ```data``` argument is the unscaled data that still has missing values but has the global structure removed. Here, we have also set ```est_impute_par = TRUE``` indicating that we would like to estimate the imputation parameters. If this argument is set to ```FALSE```, then the argument ```impute_par``` will need to be set with user supplied covariance parameters.
 
 ```{r detect_cp, echo = TRUE, cache = FALSE, eval = TRUE}
 
 # Impute missing data, run MCMCs, and estimate MAPs
-cp_gibbs2 <- detect_cp_v2(data = data,
+cp_gibbs2 <- detect_cp(data = data,
                           start.vals = start.vals,
                           prop_var = prop_var,
                           cp_prop_var = cp_prop_var,
@@ -472,7 +472,7 @@ cp_gibbs2$changepoint_results$cp_map
 cp_gibbs2$grooves
 ```
 
-Finally, we can call a function that also removes global structure, and thus can take in the raw crosscut data. This function is called ```get_grooves_bcp```. The necessary arguments of this function follow a slightly different format than with the other functions so that it conforms to similar functions existing in the ```bulletxtrctr``` package. This function ultimately just removes the global structure and then calls ```detect_cp_v2()```. As such, the user can supply arguments to be passed to ```detect_cp_v2```, but it is intended that this not usually be necessary. The main reason why one may want to do this is to increase the number of iterations that each MCMC is run. The longer the MCMC is run, the more likely that the models can escape any local modes. For this reason, we demonstrate how a specific user supplied argument for the number of iterations can be fed to ```get_grooves_bcp```.
+Finally, we can call a function that also removes global structure, and thus can take in the raw crosscut data. This function is called ```get_grooves_bcp```. The necessary arguments of this function follow a slightly different format than with the other functions so that it conforms to similar functions existing in the ```bulletxtrctr``` package. This function ultimately just removes the global structure and then calls ```detect_cp()```. As such, the user can supply arguments to be passed to ```detect_cp```, but it is intended that this not usually be necessary. The main reason why one may want to do this is to increase the number of iterations that each MCMC is run. The longer the MCMC is run, the more likely that the models can escape any local modes. For this reason, we demonstrate how a specific user supplied argument for the number of iterations can be fed to ```get_grooves_bcp```.
 
 ```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
 # Estimate the groove locations in the intended fashion using default argument values 

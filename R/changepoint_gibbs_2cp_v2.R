@@ -35,7 +35,7 @@
 #' log likelihood values, and proposal variance for the changepoints.
 #' @importFrom mvtnorm rmvnorm
 #' @export
-cp2_gibbs_v2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE)
+runmcmc_cp2 <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, tol_cp = 1000, warmup = 500, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 

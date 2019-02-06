@@ -55,7 +55,7 @@
 #' @importFrom Rdpack reprompt
 #' @export
 
-detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200, verbose = FALSE,
+detect_cp <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200, verbose = FALSE,
                          prior_numcp = rep(1/4, times = 4), est_impute_par = FALSE, impute_par = c(0.8,15))
 {
   ## put extra functions in here just in case
@@ -106,12 +106,12 @@ detect_cp_v2 <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_p
   }
   if(any(is.na(d$y)) == TRUE)
   {
-    nud <- myimpute(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
+    nud <- imputeGP(y = d$y, x = d$x, sigma = impute_par[1], l = impute_par[2])
   }
   else{nud <- d}
 
   ## run cp algorithm
-  test_variable_cp_gibbs <- variable_cp_gibbs_v2(data = nud,
+  test_variable_cp_gibbs <- runmcmc_cpall(data = nud,
                                                           start.vals = start.vals,
                                                           prop_var = prop_var, cp_prop_var = cp_prop_var, verbose = FALSE, tol_edge = tol_edge, tol_cp = tol_cp, iter = iter, warmup = warmup, prior_numcp = prior_numcp)
   ## note that the order that the MAPs are returned in
@@ -210,7 +210,7 @@ get_grooves_bcp <- function(x, value, adjust = 10, ...)
   data <- data.frame("x" = land$x, "y" = land$rlo_resid)
   # data <- data.frame("x" = land$x, "y" = land$value)
 
-  cp_results <- detect_cp_v2(data = data, ...)
+  cp_results <- detect_cp(data = data, ...)
 
   ## groove locations plus adjustment
   groove <- c(cp_results$grooves[1] + adjust, cp_results$grooves[2] - adjust)

@@ -29,7 +29,7 @@
 #' values of the log data pdf at each sampled parameter value. "gp_prop_var" and "cp_prop_var" are
 #' the tuned proposal variances for the metropolis steps.
 #' @export
-cp1_gibbs_right <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 500, verbose = FALSE)
+runmcmc_cp1_right <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_edge = 50, warmup = 500, verbose = FALSE)
 {
   ##data is a data frame with column x and column y
 

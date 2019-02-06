@@ -64,7 +64,7 @@ mlgp <- function(y,x,tol = 1e-6)
 #' @return A data frame with columns "x" and "y" which contain the combined observed and imputed data.
 #' @export
 
-myimpute <- function(y,x, sigma, l)
+imputeGP <- function(y,x, sigma, l)
 {
   ## squared exponential covariance function
   cov.fun <- function(x1, x2, par)
