@@ -1,7 +1,7 @@
 Package: bulletcp
 Type: Package
 Title: Automatic groove identification via Bayesian changepoint detection
-Version: 0.1.1.9002
+Version: 0.1.1.9003
 Authors@R: c(person("Nathaniel", "Garton", email = "nmgarton@iastate.edu", role = c("aut","cre")),
     person("Kiegan", "Rice", email = "ricek@iastate.edu", role = "ctb"))
 Maintainer: Nate Garton <nate.garton13@gmail.com>
