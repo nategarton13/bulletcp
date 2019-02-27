@@ -129,7 +129,7 @@ Here, $Y$ is observed data and $Y^*$ is the missing data, and the covariance mat
 
 # Example 
 
-In this section, we will go through an example by individually using each necessary function as well as by using the wrapper function designed to perform all of the necessary steps with one function call. Data from this example comes from the the James Hamby study [@hamby2009].
+In this section, we will go through an example by individually using each necessary function as well as by using the wrapper function designed to perform all of the necessary steps with one function call. Data from this example comes from the the James Hamby study [@hamby2009]. We downsample the data to make the example run faster, but this would not be preferred in practice.
 
 First, we read in the data. These data are an example of an average of several 2D cross cuts from a 3D bullet land scan in the Hamby 44 data set. We can tell both from the plot and the ```head(raw_data)``` call that there are missing values in the data. 
 
@@ -138,6 +138,7 @@ library(bulletcp)
 
 data("example_data")
 head(raw_data)
+raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
 
 ggplot(data = raw_data) +
   geom_point(aes(x = x, y = value)) +
@@ -186,7 +187,7 @@ d <- d[d$x >= min_x_notNA & d$x <= max_x_notNA,]
 Once the data have been scaled, we take a subset of them by selecting every 20-th point to use when estimating the Gaussian process parameters. Then, we estimate these parameters using the ```mlgp()``` function in this package. The optimization routine is done on the log scale so as to remove boundary constraints for the Gaussian process parameters, which are both constrained to be positive. The first parameter value returned is the log of the process standard deviation, and the second returned parameters value is the log of the length scale. The default values used if one does not choose to estimate the Gaussian process parameters are $0.8$ and $15$ for the standard deviation and length scale, respecively.
 ```{r estimate_gp_par, echo = TRUE, cache=FALSE, eval = TRUE}
 # subset data
-temp_d <- d[seq(from = 1, to = nrow(d),by = 20),]
+temp_d <- d[seq(from = 1, to = nrow(d),by = 1),]
 
 # remove missing data
 temp_d <- temp_d[complete.cases(temp_d),]
@@ -236,7 +237,8 @@ start.vals <- list("sigma" = c(1), "l" = c(10))
 prop_var <- diag(c(1/2,1/2))
 
 # run the RWMH sampler for the zero changepoint model
-m0cp <- runmcmc_cp0(data = full_data, iter = 5000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
+set.seed(1111)
+m0cp <- runmcmc_cp0(data = full_data, iter = 1000, start.vals = start.vals, prop_var = prop_var, warmup = 500, verbose = FALSE)
 
 # print maximum value of the (conditional) log posterior up to the normalizing constant
 max(m0cp$lpost)
@@ -249,8 +251,8 @@ Now we proceed to the slightly more involved cases where the model assumes that 
 ```{r cp1_gibbs_complicated, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # define starting values for the changepoints
-cp_start_left <- min(full_data$x) + 30
-cp_start_right <- max(full_data$x) - 30
+cp_start_left <- min(full_data$x) + 60
+cp_start_right <- max(full_data$x) - 60
    
 # define list of starting values for both the left and right changepoint models 
 start.vals <- list("left" = list("sigma" = c(1,1), 
@@ -274,18 +276,20 @@ prop_var <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)),
 cp_prop_var <- 10^2
 
 # run Gibbs MCMC for the left GEA model 
-m1cp_left <- runmcmc_cp1_left(data = full_data, iter = 5000, warmup = 500, 
+set.seed(1111)
+m1cp_left <- runmcmc_cp1_left(data = full_data, iter = 1000, warmup = 500, 
                             start.vals = start.vals$left, 
                             prop_var = prop_var$left, 
                             cp_prop_var = cp_prop_var, 
-                            verbose = FALSE, tol_edge = 20)
+                            verbose = FALSE, tol_edge = 50)
 
 # run Gibbs MCMC for the right GEA model
-m1cp_right <- runmcmc_cp1_right(data = full_data, iter = 5000, warmup = 500, 
+set.seed(1111)
+m1cp_right <- runmcmc_cp1_right(data = full_data, iter = 1000, warmup = 500, 
                               start.vals = start.vals$right, 
                               prop_var = prop_var$right, 
                               cp_prop_var = cp_prop_var, 
-                              verbose = FALSE, tol_edge = 20)
+                              verbose = FALSE, tol_edge = 50)
 
 # Find MAP estimates under both models of the changepoint location 
 map_cp1_left <- as.numeric(m1cp_left$parameters$cp)[which.max(m1cp_left$lpost)]
@@ -311,13 +315,14 @@ Note that the function ```runmcmc_cp1()``` is just a wrapper for the ```runmcmc_
 ```{r cp1_gibbs_simple, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # run both Gibbs MCMC algorithms for each of the single changepoint model
-m1cp <- runmcmc_cp1(data = full_data, iter = 5000, 
+set.seed(1111)
+m1cp <- runmcmc_cp1(data = full_data, iter = 1000, 
                      start.vals.left = start.vals$left, 
                      start.vals.right = start.vals$right,
                      prop_var_left = prop_var$left, 
                      prop_var_right = prop_var$right, 
                      cp_prop_var = cp_prop_var, 
-                     tol_edge = 20, 
+                     tol_edge = 50, 
                      warmup = 500, verbose = FALSE)
 
 # Find MAP estimates under both models of the changepoint location 
@@ -349,12 +354,13 @@ prop_var <- list(diag(c(1/2,1/2,1/2,1/2)),
 cp_prop_var <- diag(c(10^2, 10^2))
 
 # run Gibbs MCMC
+set.seed(1111)
 m2cp <- runmcmc_cp2(data = full_data, 
-                     iter = 5000, 
+                     iter = 1000, 
                      start.vals = start.vals, 
                      prop_var = prop_var, 
                      cp_prop_var = cp_prop_var, 
-                     tol_edge = 20, 
+                     tol_edge = 50, 
                      tol_cp = 1000, 
                      warmup = 500, 
                      verbose = FALSE)
@@ -385,8 +391,8 @@ First, we will start with the function which does the least data preprocessing. 
 ```{r variable_cp_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 
 # changepoint starting values
-cp_sval_left <- min(full_data$x) + 50
-cp_sval_right <- max(full_data$x) - 50
+cp_sval_left <- min(full_data$x) + 60
+cp_sval_right <- max(full_data$x) - 60
 
 # list of starting values for each model
 start.vals <- list("cp2" = list("sigma" = c(1,1,1), 
@@ -425,6 +431,7 @@ cp_prop_var <- list("cp2" = diag(c(10^2, 10^2)),
 # prior on the number of changepoints 
 prior_numcp <- rep(1/4, times = 4)
 
+set.seed(1111)
 cp_gibbs <- runmcmc_cpall(data = full_data,
                                  start.vals = start.vals,
                                  prop_var = prop_var,
@@ -432,7 +439,7 @@ cp_gibbs <- runmcmc_cpall(data = full_data,
                                  verbose = FALSE,
                                  tol_edge = 50,
                                  tol_cp = 1000, 
-                                 iter = 5000,
+                                 iter = 1000,
                                  warmup = 500,
                                  prior_numcp = prior_numcp)
 
@@ -449,6 +456,7 @@ Now we introduce the usage of a function which, once global structure has been r
 ```{r detect_cp, echo = TRUE, cache = FALSE, eval = TRUE}
 
 # Impute missing data, run MCMCs, and estimate MAPs
+set.seed(1111)
 cp_gibbs2 <- detect_cp(data = data,
                           start.vals = start.vals,
                           prop_var = prop_var,
@@ -456,7 +464,7 @@ cp_gibbs2 <- detect_cp(data = data,
                           verbose = FALSE,
                           tol_edge = 50,
                           tol_cp = 1000, 
-                          iter = 5000,
+                          iter = 1000,
                           warmup = 500,
                           prior_numcp = prior_numcp,
                           est_impute_par = TRUE)
@@ -475,17 +483,11 @@ cp_gibbs2$grooves
 Finally, we can call a function that also removes global structure, and thus can take in the raw crosscut data. This function is called ```get_grooves_bcp```. The necessary arguments of this function follow a slightly different format than with the other functions so that it conforms to similar functions existing in the ```bulletxtrctr``` package. This function ultimately just removes the global structure and then calls ```detect_cp()```. As such, the user can supply arguments to be passed to ```detect_cp```, but it is intended that this not usually be necessary. The main reason why one may want to do this is to increase the number of iterations that each MCMC is run. The longer the MCMC is run, the more likely that the models can escape any local modes. For this reason, we demonstrate how a specific user supplied argument for the number of iterations can be fed to ```get_grooves_bcp```.
 
 ```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
-# Estimate the groove locations in the intended fashion using default argument values 
-cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10)
+# Estimate the groove locations by supplying additional arguments 
+cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 1000)
 
 # Estimated groove locations
 cp_gibbs3$groove
-
-# Estimate the groove locations by supplying additional arguments 
-cp_gibbs4 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 10000)
-
-# Estimated groove locations
-cp_gibbs4$groove
 
 ```
 # Acknowledgements 
