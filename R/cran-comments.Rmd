@@ -2,7 +2,7 @@
 title: "cran-comments"
 author: "Nate Garton"
 date: "February 27, 2019"
-output: html_document
+output: md_document
 ---
 
 ## Test environments

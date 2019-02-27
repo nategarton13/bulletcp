@@ -1,0 +1,64 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+# bulletcp
+
+The goal of bulletcp is to easily automate the identification of groove locations via a Bayesian changepoint model on data which are 2D crossections of 3D bullet land scans. Ultimately, this package will potentially support other packages implementing automated bullet land matching algorithms for use by forensic scientists or statisticians. The only function that should ideally be used by a user or another function is ```get_grooves_bcp()```, which takes minimal arguments (though several optional arguemnts can be supplied) and returns a list. Of the items in the list, the only one that should ideally be needed by anyone is the one called "groove": a two element vector of estimated groove locations.
+
+
+## Installation
+
+You can install the released version of bulletcp from [CRAN](https://CRAN.R-project.org) with:
+
+``` r
+install.packages("bulletcp")
+```
+
+## Example
+
+The ideal usage of the package is now demonstrated on the example data included. First, we show what the data should look like. 
+
+```{r, eval = TRUE , echo = TRUE}
+library(bulletcp)
+library(ggplot2)
+
+data("example_data")
+head(raw_data)
+
+ggplot(data = raw_data) +
+  geom_point(aes(x = x, y = value)) +
+  theme_bw() +
+  ylab("Height") +
+  xlab("Width")
+```
+
+Next, we use the ```get_grooves_bcp()``` function on the raw data to get the groove locations. 
+
+```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
+# Estimate the groove locations by supplying additional arguments 
+cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 10000)
+
+# Estimated groove locations
+cp_gibbs$groove
+
+ggplot(data = raw_data) +
+  geom_point(aes(x = x, y = value)) +
+  theme_bw() +
+  ylab("Height") +
+  xlab("Width") +
+  geom_vline(aes(xintercept = cp_gibbs$groove[1])) +
+  geom_vline(aes(xintercept = cp_gibbs$groove[2]))
+
+```
+
