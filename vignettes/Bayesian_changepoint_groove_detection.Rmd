@@ -1,6 +1,6 @@
 ---
 title: "Groove detection with a Bayesian changepoint model"
-author: "Nate Garton"
+author: "Nathaniel Garton"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_document
 vignette: >
