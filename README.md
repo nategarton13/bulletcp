@@ -54,15 +54,16 @@ ggplot(data = raw_data) +
 
 <img src="man/figures/README-unnamed-chunk-1-1.png" width="100%" />
 
-Next, we use the `get_grooves_bcp()` function on the raw data to get the groove locations.
+Next, we use the `get_grooves_bcp()` function on the raw data to get the groove locations. Downsampled data are used here for speed, but in practice the full data should be used.
 
 ``` r
 # Estimate the groove locations by supplying additional arguments 
-cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 10000)
+raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
+cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 30, iter = 2000)
 
 # Estimated groove locations
 cp_gibbs$groove
-#> [1]  128.8428 2000.5187
+#> [1]  202.73 2021.10
 
 ggplot(data = raw_data) +
   geom_point(aes(x = x, y = value)) +
@@ -71,7 +72,7 @@ ggplot(data = raw_data) +
   xlab("Width") +
   geom_vline(aes(xintercept = cp_gibbs$groove[1])) +
   geom_vline(aes(xintercept = cp_gibbs$groove[2]))
-#> Warning: Removed 323 rows containing missing values (geom_point).
+#> Warning: Removed 11 rows containing missing values (geom_point).
 ```
 
 <img src="man/figures/README-get_grooves_bcp-1.png" width="100%" />

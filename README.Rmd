@@ -27,7 +27,7 @@ install.packages("bulletcp")
 
 ## Example
 
-The ideal usage of the package is now demonstrated on the example data included. First, we show what the data should look like. 
+The ideal usage of the package is now demonstrated on the example data included. First, we show what the data should look like.
 
 ```{r, eval = TRUE , echo = TRUE}
 library(bulletcp)
@@ -43,11 +43,12 @@ ggplot(data = raw_data) +
   xlab("Width")
 ```
 
-Next, we use the ```get_grooves_bcp()``` function on the raw data to get the groove locations. 
+Next, we use the ```get_grooves_bcp()``` function on the raw data to get the groove locations. Downsampled data are used here for speed, but in practice the full data should be used.
 
 ```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
 # Estimate the groove locations by supplying additional arguments 
-cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 10000)
+raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
+cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 30, iter = 2000)
 
 # Estimated groove locations
 cp_gibbs$groove
