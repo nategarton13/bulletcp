@@ -3,7 +3,7 @@
 bulletcp
 ========
 
-The goal of bulletcp is to easily automate the identification of groove locations via a Bayesian changepoint model on data which are 2D crossections of 3D bullet land scans. Ultimately, this package will potentially support other packages implementing automated bullet land matching algorithms for use by forensic scientists or statisticians. The only function that should ideally be used by a user or another function is `get_grooves_bcp()`, which takes minimal arguments (though several optional arguemnts can be supplied) and returns a list. Of the items in the list, the only one that should ideally be needed by anyone is the one called "groove": a two element vector of estimated groove locations.
+The goal of bulletcp is to easily automate the identification of groove locations via a Bayesian changepoint model on data which are 2D crossections of 3D bullet land scans. Ultimately, this package will potentially support other packages implementing automated bullet land matching algorithms for use by forensic scientists or statisticians. The only function that should ideally be used by a user or another function is `get_grooves_bcp()`, which takes minimal arguments (though several optional arguments can be supplied) and returns a list. Of the items in the list, the only one that should ideally be needed by anyone is the one called "groove": a two element vector of estimated groove locations.
 
 Installation
 ------------
@@ -63,7 +63,7 @@ cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 30,
 
 # Estimated groove locations
 cp_gibbs$groove
-#> [1]  202.73 2021.10
+#> [1]  140.8313 2021.1000
 
 ggplot(data = raw_data) +
   geom_point(aes(x = x, y = value)) +

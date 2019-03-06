@@ -335,7 +335,7 @@ map_cp1_right2
 ```
 
 ### Model with two GEAs
-Because assuming a model structure with a single GEA involves fitting two models, fitting a model that assumes there are two GEAs is actually a bit simpler. Though it requires proposal variances and starting values for bothatGEAs as well as the LEA, it requires only performing one MCMC. The function that performs this sampling is named ```changepoint_gibbs_2cp_v2()```, and its use is shown in the code block below. The one additional argument specific to this function is the named ```tol_cp```. This is similar to the ```tol_edge``` argument except it specifies how close the changepoints can be to each other, not to the edge of the data. The default value for this argument is 1000, as this range is well below the range of the data. 
+Because assuming a model structure with a single GEA involves fitting two models, fitting a model that assumes there are two GEAs is actually a bit simpler. Though it requires proposal variances and starting values for both GEAs as well as the LEA, it requires only performing one MCMC. The function that performs this sampling is named ```changepoint_gibbs_2cp_v2()```, and its use is shown in the code block below. The one additional argument specific to this function is the named ```tol_cp```. This is similar to the ```tol_edge``` argument except it specifies how close the changepoints can be to each other, not to the edge of the data. The default value for this argument is 1000, as this range is well below the range of the data. 
 
 ```{r cp2_gibbs, echo = TRUE, cache=FALSE, eval = TRUE}
 # define starting values
