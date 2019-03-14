@@ -53,6 +53,26 @@
 #' past the outermost non-missing values), and the estimated groove locations.
 #' @importFrom stats complete.cases
 #' @importFrom Rdpack reprompt
+#' @example
+#' # Fake data
+#' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
+#' {
+#'     x <- seq(from = 0, to = 2158, by = 20)
+#'     med <- median(x)
+#'     y <- 1*(x <= a)*(beta[1]*(x - med) - beta[1]*(a - med)) +
+#'     1*(x >= 2158 - a)*(beta[2]*(x - med) - beta[2]*(2158 - a - med))
+#'     return(data.frame("x" = x, "y" = y))
+#' }
+#'
+#' fake_groove <- sim_groove()
+#' cp_gibbs2 <- detect_cp(data = fake_groove,
+#'                     verbose = FALSE,
+#'                     tol_edge = 50,
+#'                     tol_cp = 1000,
+#'                     iter = 300,
+#'                     warmup = 100,
+#'                     est_impute_par = FALSE)
+#'
 #' @export
 
 detect_cp <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200, verbose = FALSE,
@@ -161,6 +181,11 @@ detect_cp <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop
 #' @importFrom stats loess
 #' @importFrom assertthat assert_that
 #' @importFrom assertthat has_name
+#' @example
+#' data("example_data")
+#' head(raw_data)
+#' raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
+#' cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 300, warmup = 100)
 #' @export
 
 get_grooves_bcp <- function(x, value, adjust = 10, ...)
