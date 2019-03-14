@@ -40,7 +40,8 @@ fake_groove <- fake_groove[order(fake_groove$x),]
 plot(fake_groove$x, fake_groove$y)
 
 # add NA values where the data are missing
-x_na <- seq(from = min(fake_groove$x), to = max(fake_groove$x), by = min(fake_groove$x[2:nrow(fake_groove)] - fake_groove$x[1:(nrow(fake_groove) - 1)]))
+x_na <- seq(from = min(fake_groove$x), to = max(fake_groove$x),
+ by = min(fake_groove$x[2:nrow(fake_groove)] - fake_groove$x[1:(nrow(fake_groove) - 1)]))
 x_na <- x_na[!round(x_na, digits = 2) \%in\% round(fake_groove$x, digits = 2)]
 y_na <- rep(NA, times = length(x_na))
 d_na <- data.frame("x" = x_na, "y" = y_na)
