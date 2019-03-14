@@ -36,7 +36,7 @@
 #' prop_var <- diag(c(1/2,1/2))
 #'
 #' set.seed(1111)
-#' m0cp <- runmcmc_cp0(data = full_data, iter = 500,
+#' m0cp <- runmcmc_cp0(data = fake_groove, iter = 500,
 #'     start.vals = start.vals,
 #'     prop_var = prop_var, warmup = 100, verbose = FALSE)
 #' @export
