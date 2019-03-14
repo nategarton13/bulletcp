@@ -6,7 +6,7 @@
 #' @importFrom stats loess
 #' @importFrom assertthat assert_that
 #' @importFrom assertthat has_name
-#' @example
+#' @examples
 #' data("example_data")
 #' head(raw_data)
 #' raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]

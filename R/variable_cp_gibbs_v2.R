@@ -44,7 +44,7 @@
 #' the maximum log probability values under each model
 #' log likelihood values, and estimates of the maximum a posteriori changepoint value
 #' under each model.
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {
@@ -191,17 +191,6 @@ runmcmc_cpall <- function(data, iter = 8000, start.vals = NA, prop_var = NA, cp_
 
 }
 
-# ## test the full procedure
-# bullet_resid <- hamby44$ccdata_w_resid[[6]]
-# test_dat <- bullet_resid[!is.na(bullet_resid$rlo_resid),]
-# d <- data.frame("x" = test_dat$y, "y" = scale(test_dat$rlo_resid))
-# plot(d$x, d$y)
-#
-# ## preprocess data
-# temp_d <- preprocess_bullet_resid_simple(data = d)
-# points(temp_d$d$x, temp_d$d$y, col = "red")
-#
-# ## run cp algorithm
 
 lognormal_ou_pdf <- function(x, mu, sigma, l)
 {
@@ -213,11 +202,3 @@ lognormal_ou_pdf <- function(x, mu, sigma, l)
                                               - 2 * rho * sum((x[1:(n-1)] - mu[1:(n-1)]) * (x[2:n] - mu[2:n]))))
 }
 
-## function to sample data weighted according to distance from center
-# sample_weights <- function(x, sq = FALSE, offset = 1)
-# {
-#   center <- (min(x) + max(x))/2
-#   ifelse(sq == FALSE, dist <- abs(x - center), dist <- (abs(x - center)^2))
-#   weights <- (dist + offset)/sum(dist + offset)
-#   return(weights)
-# }

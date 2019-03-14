@@ -17,7 +17,7 @@
 #' "iter". "accept" gives the proportion of accepted proposals after warmup. "lp" is a vector of
 #' values of the log data pdf at each sampled parameter value.
 #' @importFrom stats dgamma dnorm runif var
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {

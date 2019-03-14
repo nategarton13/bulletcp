@@ -27,7 +27,7 @@
 #' values of the log data pdf at each sampled parameter value. "gp_prop_var" and "cp_prop_var" are
 #' the tuned proposal variances for the metropolis steps.
 #' @importFrom stats median dgamma dnorm runif rnorm
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {

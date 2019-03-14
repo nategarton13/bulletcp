@@ -10,7 +10,7 @@
 #'   the second is the length scale.
 #' @importFrom mvtnorm dmvnorm
 #' @importFrom stats optim
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {
@@ -82,7 +82,7 @@ mlgp <- function(y,x,tol = 1e-6)
 #' @param sigma Marginal standard deviation in the Gaussian process.
 #' @param l Length scale parameter in the Gaussian process.
 #' @return A data frame with columns "x" and "y" which contain the combined observed and imputed data.
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {

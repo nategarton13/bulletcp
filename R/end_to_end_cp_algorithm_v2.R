@@ -53,7 +53,7 @@
 #' past the outermost non-missing values), and the estimated groove locations.
 #' @importFrom stats complete.cases
 #' @importFrom Rdpack reprompt
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {
@@ -181,7 +181,7 @@ detect_cp <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop
 #' @importFrom stats loess
 #' @importFrom assertthat assert_that
 #' @importFrom assertthat has_name
-#' @example
+#' @examples
 #' data("example_data")
 #' head(raw_data)
 #' raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]

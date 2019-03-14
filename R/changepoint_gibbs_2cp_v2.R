@@ -34,7 +34,7 @@
 #' @return A named list containing the sampled parameters, acceptance rates for the Metropolis steps,
 #' log likelihood values, and proposal variance for the changepoints.
 #' @importFrom mvtnorm rmvnorm
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {

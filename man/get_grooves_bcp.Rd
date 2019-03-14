@@ -24,3 +24,9 @@ past the outermost non-missing values), and the estimated groove locations.
 \description{
 This is a wrapper function that comforms to the other get_grooves functions.
 }
+\examples{
+data("example_data")
+head(raw_data)
+raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
+cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 300, warmup = 100)
+}

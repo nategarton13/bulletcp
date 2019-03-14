@@ -28,7 +28,7 @@
 #' @param verbose Logical value indicating whether to print the iteration number and the parameter proposals.
 #' @return A named list with all of the output that the left and right changepoint functions produce
 #' individually plus the posterior means of the left and right changepoints.
-#' @example
+#' @examples
 #' # Fake data
 #' sim_groove <- function(beta = c(-0.28,0.28), a = 125)
 #' {
