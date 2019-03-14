@@ -6,7 +6,7 @@ Authors@R: c(person("Nathaniel", "Garton", email = "nate.garton13@gmail.com", ro
     person("Kiegan", "Rice", email = "ricek@iastate.edu", role = "ctb"))
 Maintainer: Nathaniel Garton <nate.garton13@gmail.com>
 Description: Provides functionality to automatically detect groove locations via a Bayesian changepoint detection method to be used in the data preprocessing step
-    of forensic bullet matching algorithms. The methods in this package are based on those in Stephens (1994) <DOI:10.2307/2986119>. Bayesian changepoint detection will simply be an option
+    of forensic bullet matching algorithms. The methods in this package are based on those in Stephens (1994) <doi:10.2307/2986119>. Bayesian changepoint detection will simply be an option
     in the function from the package 'bulletxtrctr' which identifies the groove locations.
 License: GPL-3
 Encoding: UTF-8
