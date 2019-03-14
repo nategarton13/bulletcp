@@ -67,7 +67,7 @@
 #' # define the proposal variance for the RWMH step sampling the changepoint
 #' cp_prop_var <- 10^2
 #'
-#' # run Gibbs MCMC for the left GEA model
+#' # run Gibbs MCMC for the right GEA model
 #' set.seed(1111)
 #' m1cp_right<- runmcmc_cp1_right(data = fake_groove, iter = 500, warmup = 100,
 #'                            start.vals = start.vals$right,
