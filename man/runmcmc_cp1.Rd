@@ -93,7 +93,7 @@ cp_prop_var <- 10^2
 
 # run Gibbs MCMC for both the right only and left only GEA models
 set.seed(1111)
-m1cp <- runmcmc_cp1(data = fake_groove iter = 500,
+m1cp <- runmcmc_cp1(data = fake_groove, iter = 500,
                  start.vals.left = start.vals$left,
                  start.vals.right = start.vals$right,
                  prop_var_left = prop_var$left,
