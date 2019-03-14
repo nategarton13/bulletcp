@@ -79,6 +79,16 @@ runmcmc_cp1_left <- function(data, iter, start.vals, prop_var, cp_prop_var, tol_
 {
   ##data is a data frame with column x and column y
 
+  lognormal_ou_pdf <- function(x, mu, sigma, l)
+  {
+    n <- length(x)
+    rho <- exp(-1/l)
+
+    return(-n/2 * log(2 * pi) - n * log(sigma) - ((n - 1)/2) * log(1 - rho^2)
+           - 1/2 * 1/(sigma^2 * (1 - rho^2)) * ((x[1] - mu[1])^2 + (x[n] - mu[n])^2 + (1 + rho^2) * sum((x[2:(n-1)] - mu[2:(n-1)])^2)
+                                                - 2 * rho * sum((x[1:(n-1)] - mu[1:(n-1)]) * (x[2:n] - mu[2:n]))))
+  }
+
   ## initialize parameter list
   par <- list()
   par$sigma <- matrix(nrow = warmup + 1, ncol = 2) ## the variance of the GP
