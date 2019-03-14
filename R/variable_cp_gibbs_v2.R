@@ -80,7 +80,8 @@
 #'                 "intercept" = c(0,0))
 #' start.vals <- list("cp2" = cp2.start.vals, "cp1" = cp1.start.vals, "cp0" = cp0.start.vals)
 #'
-#' # list of starting values for each of the two MH steps (not sampling the changepoint) for both the left and right changepoint models
+#' # list of starting values for each of the two MH steps
+#' # (not sampling the changepoint) for both the left and right changepoint models
 #' prop_var_0cp <- diag(c(1/2,1/2))
 #' prop_var_lrcp <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)),
 #'                             diag(c(1/2,1/2))),

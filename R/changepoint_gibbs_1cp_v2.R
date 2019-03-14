@@ -57,7 +57,8 @@
 #'                                 "beta" = c(1),
 #'                                 "intercept" = c(0)))
 #'
-#' # list of starting values for each of the two MH steps (not sampling the changepoint) for both the left and right changepoint models
+#' # list of starting values for each of the two MH steps
+#' #  (not sampling the changepoint) for both the left and right changepoint models
 #'
 #' prop_var <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)),
 #'                             diag(c(1/2,1/2))),
@@ -69,7 +70,7 @@
 #'
 #' # run Gibbs MCMC for both the right only and left only GEA models
 #' set.seed(1111)
-#' m1cp <- runmcmc_cp1(data = full_data, iter = 500,
+#' m1cp <- runmcmc_cp1(data = fake_groove iter = 500,
 #'                  start.vals.left = start.vals$left,
 #'                  start.vals.right = start.vals$right,
 #'                  prop_var_left = prop_var$left,

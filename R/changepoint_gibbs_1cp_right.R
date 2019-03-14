@@ -57,7 +57,8 @@
 #'                                 "beta" = c(1),
 #'                                 "intercept" = c(0)))
 #'
-#' # list of starting values for each of the two MH steps (not sampling the changepoint) for both the left and right changepoint models
+#' # list of starting values for each of the two MH steps
+#' # (not sampling the changepoint) for both the left and right changepoint models
 #'
 #' prop_var <- list("left" = list(diag(c(1/2,1/2,1/2,1/2)),
 #'                             diag(c(1/2,1/2))),
