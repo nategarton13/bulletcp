@@ -185,7 +185,11 @@ detect_cp <- function(data, iter = 5000, start.vals = NA, prop_var = NA, cp_prop
 #' data("example_data")
 #' head(raw_data)
 #' raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
-#' cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 300, warmup = 100)
+#' cp_gibbs3 <- get_grooves_bcp(x = raw_data$x,
+#'     value = raw_data$value,
+#'     adjust = 10,
+#'     iter = 300,
+#'     warmup = 100)
 #' @export
 
 get_grooves_bcp <- function(x, value, adjust = 10, ...)
