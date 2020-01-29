@@ -4,9 +4,18 @@
 \alias{runmcmc_cpall}
 \title{Estimate posterior distributions for the 0, 1, or 2 changepoint case.}
 \usage{
-runmcmc_cpall(data, iter = 8000, start.vals = NA, prop_var = NA,
-  cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 500,
-  verbose = FALSE, prior_numcp = rep(1/4, times = 4))
+runmcmc_cpall(
+  data,
+  iter = 8000,
+  start.vals = NA,
+  prop_var = NA,
+  cp_prop_var = NA,
+  tol_edge = 50,
+  tol_cp = 1000,
+  warmup = 500,
+  verbose = FALSE,
+  prior_numcp = rep(1/4, times = 4)
+)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the

@@ -4,8 +4,7 @@
 \alias{runmcmc_cp0}
 \title{Estimate a posterior distribution of data conditional on zero changepoints.}
 \usage{
-runmcmc_cp0(data, iter, start.vals, prop_var, warmup = 500,
-  verbose = FALSE)
+runmcmc_cp0(data, iter, start.vals, prop_var, warmup = 500, verbose = FALSE)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the

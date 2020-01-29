@@ -4,9 +4,18 @@
 \alias{runmcmc_cp1}
 \title{Estimate a posterior distribution of data conditional that there is one groove.}
 \usage{
-runmcmc_cp1(data, iter, start.vals.left, start.vals.right, prop_var_left,
-  prop_var_right, cp_prop_var, tol_edge = 10, warmup = 500,
-  verbose = FALSE)
+runmcmc_cp1(
+  data,
+  iter,
+  start.vals.left,
+  start.vals.right,
+  prop_var_left,
+  prop_var_right,
+  cp_prop_var,
+  tol_edge = 10,
+  warmup = 500,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the

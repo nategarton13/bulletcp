@@ -4,10 +4,20 @@
 \alias{detect_cp}
 \title{Impute data and estimate groove locations.}
 \usage{
-detect_cp(data, iter = 5000, start.vals = NA, prop_var = NA,
-  cp_prop_var = NA, tol_edge = 50, tol_cp = 1000, warmup = 200,
-  verbose = FALSE, prior_numcp = rep(1/4, times = 4),
-  est_impute_par = FALSE, impute_par = c(0.8, 15))
+detect_cp(
+  data,
+  iter = 5000,
+  start.vals = NA,
+  prop_var = NA,
+  cp_prop_var = NA,
+  tol_edge = 50,
+  tol_cp = 1000,
+  warmup = 200,
+  verbose = FALSE,
+  prior_numcp = rep(1/4, times = 4),
+  est_impute_par = FALSE,
+  impute_par = c(0.8, 15)
+)
 }
 \arguments{
 \item{data}{Data frame with columns "x" and "y." "x" is a column of the locations of the
