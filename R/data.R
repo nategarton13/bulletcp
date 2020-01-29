@@ -8,4 +8,4 @@
 #'     \item{value}{the height of the land at the given location described by x}
 #' }
 #' @source Hamby 44
-"raw_data"
+"example_data"
