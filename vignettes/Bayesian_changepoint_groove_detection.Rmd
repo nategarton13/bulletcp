@@ -131,16 +131,16 @@ Here, $Y$ is observed data and $Y^*$ is the missing data, and the covariance mat
 
 In this section, we will go through an example by individually using each necessary function as well as by using the wrapper function designed to perform all of the necessary steps with one function call. Data from this example comes from the the James Hamby study [@hamby2009]. We downsample the data to make the example run faster, but this would not be preferred in practice.
 
-First, we read in the data. These data are an example of an average of several 2D cross cuts from a 3D bullet land scan in the Hamby 44 data set. We can tell both from the plot and the ```head(raw_data)``` call that there are missing values in the data. 
+First, we read in the data. These data are an example of an average of several 2D cross cuts from a 3D bullet land scan in the Hamby 44 data set. We can tell both from the plot and the ```head(example_data)``` call that there are missing values in the data. 
 
-```{r raw_data, echo=TRUE, cache=FALSE, fig.cap="\\label{f:raw_data} A plot of an averaged cross cut from a 3D bullet land scan.", eval = TRUE}
+```{r example_data, echo=TRUE, cache=FALSE, fig.cap="\\label{f:example_data} A plot of an averaged cross cut from a 3D bullet land scan.", eval = TRUE}
 library(bulletcp)
 
 data("example_data")
-head(raw_data)
-raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
+head(example_data)
+example_data <- example_data[seq(from = 1, to = nrow(example_data), by = 30),]
 
-ggplot(data = raw_data) +
+ggplot(data = example_data) +
   geom_point(aes(x = x, y = value)) +
   theme_bw() +
   ylab("Height") +
@@ -154,16 +154,16 @@ The data shown above still contains the global bullet curvature. The changepoint
 ```{r global_structure, echo=TRUE, cache=FALSE, eval = TRUE}
 
 # set the minimum y-value to zero
-check_min <- min(raw_data$value[!is.na(raw_data$value)])
-raw_data <- dplyr::mutate(raw_data, value_std = value - check_min)
+check_min <- min(example_data$value[!is.na(example_data$value)])
+example_data <- dplyr::mutate(example_data, value_std = value - check_min)
 
 # remove global structure
-rlo_fit <- robust_loess_fit(cc = raw_data, iter = 20)
-raw_data$rlo_pred <- predict(rlo_fit, newdata = raw_data)
-raw_data$rlo_resid <- raw_data$value_std - raw_data$rlo_pred
+rlo_fit <- robust_loess_fit(cc = example_data, iter = 20)
+example_data$rlo_pred <- predict(rlo_fit, newdata = example_data)
+example_data$rlo_resid <- example_data$value_std - example_data$rlo_pred
 
 # define new data frame without the global structure
-data <- data.frame("x" = raw_data$x, "y" = raw_data$rlo_resid)
+data <- data.frame("x" = example_data$x, "y" = example_data$rlo_resid)
 
 # plot the new data
 ggplot(data = data) +
@@ -484,7 +484,7 @@ Finally, we can call a function that also removes global structure, and thus can
 
 ```{r get_grooves_bcp, echo = TRUE, cache = FALSE, eval = TRUE}
 # Estimate the groove locations by supplying additional arguments 
-cp_gibbs3 <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 10, iter = 1000)
+cp_gibbs3 <- get_grooves_bcp(x = example_data$x, value = example_data$value, adjust = 10, iter = 1000)
 
 # Estimated groove locations
 cp_gibbs3$groove
