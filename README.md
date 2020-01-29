@@ -35,7 +35,7 @@ library(bulletcp)
 library(ggplot2)
 
 data("example_data")
-head(raw_data)
+head(example_data)
 #>       x value
 #> 1 0.000    NA
 #> 2 0.645    NA
@@ -44,7 +44,7 @@ head(raw_data)
 #> 5 2.580    NA
 #> 6 3.225    NA
 
-ggplot(data = raw_data) +
+ggplot(data = example_data) +
   geom_point(aes(x = x, y = value)) +
   theme_bw() +
   ylab("Height") +
@@ -58,14 +58,14 @@ Next, we use the `get_grooves_bcp()` function on the raw data to get the groove 
 
 ``` r
 # Estimate the groove locations by supplying additional arguments 
-raw_data <- raw_data[seq(from = 1, to = nrow(raw_data), by = 30),]
-cp_gibbs <- get_grooves_bcp(x = raw_data$x, value = raw_data$value, adjust = 30, iter = 2000)
+example_data <- example_data[seq(from = 1, to = nrow(example_data), by = 30),]
+cp_gibbs <- get_grooves_bcp(x = example_data$x, value = example_data$value, adjust = 30, iter = 2000)
 
 # Estimated groove locations
 cp_gibbs$groove
 #> [1]  68.7000 178.0647
 
-ggplot(data = raw_data) +
+ggplot(data = example_data) +
   geom_point(aes(x = x, y = value)) +
   theme_bw() +
   ylab("Height") +
